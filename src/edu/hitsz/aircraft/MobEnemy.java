@@ -32,4 +32,19 @@ public class MobEnemy extends AbstractAircraft {
         return new LinkedList<>();
     }
 
+    @Override
+    public int getDirection() {
+        return 0;
+    }
+
+    @Override
+    public int getShootNum() {
+        return 0;
+    }
+
+    @Override
+    public int getPower() {
+        return 0;
+    }
+
 }
