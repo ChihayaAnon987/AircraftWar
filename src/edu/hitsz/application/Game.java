@@ -1,9 +1,6 @@
 package edu.hitsz.application;
 
-import edu.hitsz.aircraft.AbstractAircraft;
-import edu.hitsz.aircraft.EliteEnemy;
-import edu.hitsz.aircraft.HeroAircraft;
-import edu.hitsz.aircraft.MobEnemy;
+import edu.hitsz.aircraft.*;
 import edu.hitsz.basic.AbstractFlyingObject;
 import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.bullet.EnemyBullet;
@@ -48,7 +45,7 @@ public class Game extends JPanel {
     /**
      * 屏幕中出现的敌机最大数量
      */
-    private int enemyMaxNumber = 4;
+    private int enemyMaxNumber = 5;
 
     /**
      * 当前得分
@@ -71,11 +68,15 @@ public class Game extends JPanel {
      */
     private boolean gameOverFlag = false;
 
+    // 使用工厂
+    private final AircraftFactory mobEnemyFactory = new MobEnemyFactory();
+    private final AircraftFactory eliteEnemyFactory = new EliteEnemyFactory();
+
     public Game() {
-        heroAircraft = new HeroAircraft(
+        heroAircraft = HeroAircraft.getInstance();
+        heroAircraft.setLocation(
                 Main.WINDOW_WIDTH / 2,
-                Main.WINDOW_HEIGHT - ImageManager.HERO_IMAGE.getHeight() ,
-                0, 0, 100);
+                Main.WINDOW_HEIGHT - ImageManager.HERO_IMAGE.getHeight());
 
         enemyAircrafts = new LinkedList<>();
         heroBullets = new LinkedList<>();
@@ -120,7 +121,7 @@ public class Game extends JPanel {
                         if (eliteSpeedX == 0) {
                             eliteSpeedX = 1;
                         }
-                        enemyAircrafts.add(new EliteEnemy(
+                        enemyAircrafts.add(eliteEnemyFactory.createAircraft(
                                 (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_ENEMY_IMAGE.getWidth())),
                                 (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
                                 eliteSpeedX,
@@ -129,7 +130,7 @@ public class Game extends JPanel {
                         ));
                     } else {
                         // 80%概率生成普通敌机
-                        enemyAircrafts.add(new MobEnemy(
+                        enemyAircrafts.add(mobEnemyFactory.createAircraft(
                                 (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.MOB_ENEMY_IMAGE.getWidth())),
                                 (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
                                 0,

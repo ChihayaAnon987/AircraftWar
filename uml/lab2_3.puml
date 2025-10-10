@@ -1,0 +1,51 @@
+@startuml
+'https://plantuml.com/class-diagram
+abstract class BaseProp {
+    + BaseProp(int locationX, int locationY, int speedX, int speedY)
+    + {abstract} effect(HeroAircraft heroAircraft, List<AbstractAircraft> eliteEnemies, List<BaseBullet> enemyBullets):void
+}
+
+class HpSupply {
+    - hpIncrease:int
+    + HpSupply(int locationX, int locationY, int speedX, int speedY)
+    + effect(HeroAircraft heroAircraft, List<AbstractAircraft> eliteEnemies, List<BaseBullet> enemyBullets):void
+}
+
+class FireSupply {
+    + FireSupply(int locationX, int locationY, int speedX, int speedY)
+    + effect(HeroAircraft heroAircraft, List<AbstractAircraft> eliteEnemies, List<BaseBullet> enemyBullets):void
+}
+
+class BombSupply {
+    + BombSupply(int locationX, int locationY, int speedX, int speedY)
+    + effect(HeroAircraft heroAircraft, List<AbstractAircraft> eliteEnemies, List<BaseBullet> enemyBullets):void
+}
+
+BaseProp <|-- HpSupply
+BaseProp <|-- FireSupply
+BaseProp <|-- BombSupply
+
+interface PropFactory {
+    + createProp(int locationX, int locationY, int speedX, int speedY):BaseProp
+}
+
+class HpSupplyFactory {
+    + createProp(int locationX, int locationY, int speedX, int speedY):BaseProp
+}
+
+class FireSupplyFactory {
+    + createProp(int locationX, int locationY, int speedX, int speedY):BaseProp
+}
+
+class BombSupplyFactory {
+    + createProp(int locationX, int locationY, int speedX, int speedY):BaseProp
+}
+
+PropFactory <|-- HpSupplyFactory
+PropFactory <|-- FireSupplyFactory
+PropFactory <|-- BombSupplyFactory
+HpSupplyFactory ..> HpSupply
+FireSupplyFactory ..> FireSupply
+BombSupplyFactory ..> BombSupply
+
+@enduml
