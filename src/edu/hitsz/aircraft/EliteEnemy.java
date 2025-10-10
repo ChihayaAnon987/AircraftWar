@@ -3,10 +3,7 @@ package edu.hitsz.aircraft;
 import edu.hitsz.application.Main;
 import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.bullet.HeroBullet;
-import edu.hitsz.prop.BaseProp;
-import edu.hitsz.prop.BombSupply;
-import edu.hitsz.prop.FireSupply;
-import edu.hitsz.prop.HpSupply;
+import edu.hitsz.prop.*;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -35,6 +32,11 @@ public class EliteEnemy extends AbstractAircraft {
      * 子弹射击方向 (向上发射：-1，向下发射：1)
      */
     private int direction = 1;
+
+    // 定义三种道具工厂
+    private static final PropFactory hpSupplyFactory = new HpSupplyFactory();
+    private static final PropFactory fireSupplyFactory = new FireSupplyFactory();
+    private static final PropFactory bombSupplyFactory = new BombSupplyFactory();
 
     public EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp) {
         super(locationX, locationY, speedX, speedY, hp);
@@ -70,9 +72,6 @@ public class EliteEnemy extends AbstractAircraft {
         return res;
     }
 
-
-
-
     @Override
     public int getDirection() {
         return direction;
@@ -100,11 +99,11 @@ public class EliteEnemy extends AbstractAircraft {
             int propType = random.nextInt(3);
             switch (propType) {
                 case 0:
-                    return new HpSupply(this.getLocationX(), this.getLocationY(), 0, 3);
+                    return hpSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
                 case 1:
-                    return new FireSupply(this.getLocationX(), this.getLocationY(), 0, 3);
+                    return fireSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
                 case 2:
-                    return new BombSupply(this.getLocationX(), this.getLocationY(), 0, 3);
+                    return bombSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
                 default:
                     return null;
             }
