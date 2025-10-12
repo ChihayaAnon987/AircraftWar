@@ -3,29 +3,29 @@ package edu.hitsz.prop;
 import edu.hitsz.aircraft.AbstractAircraft;
 import edu.hitsz.aircraft.HeroAircraft;
 import edu.hitsz.bullet.BaseBullet;
-import edu.hitsz.strategy.ScatterShootStrategy;
+import edu.hitsz.strategy.RingShootStrategy;
 
 import java.util.List;
 
-public class FireSupply extends BaseProp {
-    public FireSupply(int locationX, int locationY, int speedX, int speedY) {
+public class SuperFireSupply extends BaseProp {
+    public SuperFireSupply(int locationX, int locationY, int speedX, int speedY) {
         super(locationX, locationY, speedX, speedY);
     }
 
 
     @Override
     public void effect(HeroAircraft heroAircraft, List<AbstractAircraft> eliteEnemies, List<BaseBullet> enemyBullets) {
-        System.out.println("FireSupply active!");
-        heroAircraft.switchToScatterShoot();
+        System.out.println("SuperFireSupply active!");
+        heroAircraft.switchToRingShoot();
         
         // 创建效果线程
         Thread effectThread = new Thread(() -> {
             try {
-                Thread.sleep(ScatterShootStrategy.SCATTER_SHOOT_DURATION);
+                Thread.sleep(RingShootStrategy.RING_SHOOT_DURATION);
                 // 效果结束后重置射击模式
                 heroAircraft.resetShootMode();
             } catch (InterruptedException e) {
-                // 线程被中断，说明拾取了相同或更高级的道具，不需要重置射击模式
+                // 线程被中断，说明拾取了相同道具，不需要重置射击模式
             }
         });
         

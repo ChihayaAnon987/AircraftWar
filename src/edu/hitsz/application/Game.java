@@ -6,6 +6,7 @@ import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.bullet.EnemyBullet;
 import edu.hitsz.bullet.HeroBullet;
 import edu.hitsz.prop.BaseProp;
+import edu.hitsz.scores.LeaderboardManager;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 
 import javax.swing.*;
@@ -78,6 +79,11 @@ public class Game extends JPanel {
     private final AircraftFactory eliteEnemyFactory = new EliteEnemyFactory();
     private final AircraftFactory superEliteEnemyFactory = new SuperEliteEnemyFactory();
     private final AircraftFactory bossEnemyFactory = new BossEnemyFactory();
+    
+    /**
+     * 排行榜管理器
+     */
+    private final LeaderboardManager leaderboardManager = new LeaderboardManager();
 
     public Game() {
         heroAircraft = HeroAircraft.getInstance();
@@ -205,7 +211,25 @@ public class Game extends JPanel {
                 // 游戏结束
                 executorService.shutdown();
                 gameOverFlag = true;
-                System.out.println("Game Over!");
+                
+                // 获取玩家姓名并记录分数
+                String playerName = JOptionPane.showInputDialog(
+                    null, 
+                    "游戏结束！您的得分：" + score + "\n请输入您的姓名：", 
+                    "游戏结束", 
+                    JOptionPane.QUESTION_MESSAGE
+                );
+                
+                // 如果玩家点击了取消或关闭对话框，使用默认名称
+                if (playerName == null || playerName.trim().isEmpty()) {
+                    playerName = leaderboardManager.getNextAnonymousName();
+                }
+                
+                // 添加记录到排行榜
+                leaderboardManager.addRecord(playerName, score);
+                
+                // 显示排行榜
+                leaderboardManager.displayLeaderboard();
             }
 
         };

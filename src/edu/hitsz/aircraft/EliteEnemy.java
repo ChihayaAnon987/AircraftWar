@@ -5,6 +5,7 @@ import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.bullet.EnemyBullet;
 import edu.hitsz.bullet.HeroBullet;
 import edu.hitsz.prop.*;
+import edu.hitsz.strategy.StraightShootStrategy;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -38,9 +39,16 @@ public class EliteEnemy extends AbstractAircraft {
     private static final PropFactory hpSupplyFactory = new HpSupplyFactory();
     private static final PropFactory fireSupplyFactory = new FireSupplyFactory();
     private static final PropFactory bombSupplyFactory = new BombSupplyFactory();
+    
+    // 道具掉落概率配置 (总和应该为100)
+    private static final int HP_SUPPLY_PROBABILITY = 50;
+    private static final int FIRE_SUPPLY_PROBABILITY = 20;
+    private static final int BOMB_SUPPLY_PROBABILITY = 30;
 
     public EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp) {
         super(locationX, locationY, speedX, speedY, hp);
+        // 精英敌机使用直射策略
+        this.shootStrategy = new StraightShootStrategy(false);
     }
 
     @Override
@@ -58,19 +66,15 @@ public class EliteEnemy extends AbstractAircraft {
      */
     @Override
     public List<BaseBullet> shoot() {
-        List<BaseBullet> res = new LinkedList<>();
-        int x = this.getLocationX();
-        int y = this.getLocationY() + direction*2;
-        int speedX = 0;
-        int speedY = this.getSpeedY() + direction*4;
-        BaseBullet bullet;
-        for(int i=0; i<shootNum; i++){
-            // 子弹发射位置相对飞机位置向前偏移
-            // 多个子弹横向分散
-            bullet = new EnemyBullet(x + (i*2 - shootNum + 1)*10, y, speedX, speedY, power);
-            res.add(bullet);
-        }
-        return res;
+        return shootStrategy.shoot(
+                this.getLocationX(),
+                this.getLocationY(),
+                this.speedX,
+                this.getSpeedY(),
+                direction,
+                shootNum,
+                power
+        );
     }
 
     @Override
@@ -96,17 +100,14 @@ public class EliteEnemy extends AbstractAircraft {
         // 50%概率掉落道具
         Random random = new Random();
         if (random.nextBoolean()) {
-            // 随机生成一种道具
-            int propType = random.nextInt(3);
-            switch (propType) {
-                case 0:
-                    return hpSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
-                case 1:
-                    return fireSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
-                case 2:
-                    return bombSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
-                default:
-                    return null;
+            // 根据配置的概率生成道具
+            int propRand = random.nextInt(100);
+            if (propRand < HP_SUPPLY_PROBABILITY) {
+                return hpSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
+            } else if (propRand < HP_SUPPLY_PROBABILITY + FIRE_SUPPLY_PROBABILITY) {
+                return fireSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
+            } else {
+                return bombSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
             }
         }
         return null;

@@ -4,6 +4,7 @@ import edu.hitsz.application.Main;
 import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.bullet.EnemyBullet;
 import edu.hitsz.prop.*;
+import edu.hitsz.strategy.RingShootStrategy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -30,10 +31,17 @@ public class BossEnemy extends AbstractAircraft {
      */
     private int direction = 1;
 
-    // 定义三种道具工厂
+    // 定义四种道具工厂
     private static final PropFactory hpSupplyFactory = new HpSupplyFactory();
     private static final PropFactory fireSupplyFactory = new FireSupplyFactory();
     private static final PropFactory bombSupplyFactory = new BombSupplyFactory();
+    private static final PropFactory superFireSupplyFactory = new SuperFireSupplyFactory();
+    
+    // 道具掉落概率配置 (总和应该为100)
+    private static final int HP_SUPPLY_PROBABILITY = 25;
+    private static final int FIRE_SUPPLY_PROBABILITY = 5;
+    private static final int BOMB_SUPPLY_PROBABILITY = 10;
+    private static final int SUPER_FIRE_SUPPLY_PROBABILITY = 60;
 
     /**
      * 构造函数
@@ -45,6 +53,8 @@ public class BossEnemy extends AbstractAircraft {
      */
     public BossEnemy(int locationX, int locationY, int speedX, int speedY, int hp) {
         super(locationX, locationY, speedX, speedY, hp);
+        // Boss敌机使用环射策略
+        this.shootStrategy = new RingShootStrategy(false);
     }
 
     @Override
@@ -58,29 +68,15 @@ public class BossEnemy extends AbstractAircraft {
 
     @Override
     public List<BaseBullet> shoot() {
-        List<BaseBullet> res = new ArrayList<>();
-        int x = this.getLocationX();
-        int y = this.getLocationY();
-        
-        // 环射弹道：20颗子弹呈环形发射
-        // 使用极坐标计算每个子弹的角度和位置
-        for (int i = 0; i < shootNum; i++) {
-            double angle = 2 * Math.PI * i / shootNum; // 均匀分布的角度
-            
-            // 计算子弹的x和y位置
-            int bulletX = (int) (x + 30 * Math.cos(angle)); // 30是半径
-            int bulletY = (int) (y + 30 * Math.sin(angle));
-            
-            // 计算子弹的速度（朝向圆心）
-            int bulletSpeedX = (int) (Math.cos(angle) * 5); // 5是速度大小
-            int bulletSpeedY = (int) (Math.sin(angle) * 5);
-            
-            // 创建子弹
-            BaseBullet bullet = new EnemyBullet(bulletX, bulletY, bulletSpeedX, bulletSpeedY, power);
-            res.add(bullet);
-        }
-        
-        return res;
+        return shootStrategy.shoot(
+                this.getLocationX(),
+                this.getLocationY(),
+                this.speedX,
+                this.getSpeedY(),
+                direction,
+                shootNum,
+                power
+        );
     }
 
     @Override
@@ -110,25 +106,27 @@ public class BossEnemy extends AbstractAircraft {
         // 为避免掉落道具重叠，仅通过水平偏移调整初始位置，保持垂直下落（speedX = 0）
         int spacing = 30; // 每个道具的水平间隔(px)，可根据图片宽度调整
         for (int i = 0; i < count; i++) {
-            int propType = random.nextInt(3);
-            // 计算水平偏移，使道具围绕 Boss 中心分布
+            // 根据配置的概率生成道具
+            int propRand = random.nextInt(100);
             int offsetIndex = i - (count - 1) / 2; // 居中偏移
             int dropX = this.getLocationX() + offsetIndex * spacing;
             int dropY = this.getLocationY();
             int speedX = 0;
             int speedY = 5;
-            switch (propType) {
-                case 0:
-                    res.add(hpSupplyFactory.createProp(dropX, dropY, speedX, speedY));
-                    break;
-                case 1:
-                    res.add(fireSupplyFactory.createProp(dropX, dropY, speedX, speedY));
-                    break;
-                case 2:
-                    res.add(bombSupplyFactory.createProp(dropX, dropY, speedX, speedY));
-                    break;
-                default:
-                    break;
+            
+            BaseProp prop;
+            if (propRand < HP_SUPPLY_PROBABILITY) {
+                prop = hpSupplyFactory.createProp(dropX, dropY, speedX, speedY);
+            } else if (propRand < HP_SUPPLY_PROBABILITY + FIRE_SUPPLY_PROBABILITY) {
+                prop = fireSupplyFactory.createProp(dropX, dropY, speedX, speedY);
+            } else if (propRand < HP_SUPPLY_PROBABILITY + FIRE_SUPPLY_PROBABILITY + BOMB_SUPPLY_PROBABILITY) {
+                prop = bombSupplyFactory.createProp(dropX, dropY, speedX, speedY);
+            } else {
+                prop = superFireSupplyFactory.createProp(dropX, dropY, speedX, speedY);
+            }
+            
+            if (prop != null) {
+                res.add(prop);
             }
         }
         return res;

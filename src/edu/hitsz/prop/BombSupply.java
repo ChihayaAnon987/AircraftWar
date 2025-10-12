@@ -14,5 +14,10 @@ public class BombSupply extends BaseProp {
     @Override
     public void effect(HeroAircraft heroAircraft, List<AbstractAircraft> eliteEnemies, List<BaseBullet> enemyBullets) {
         System.out.println("BombSupply active!");
+        
+        // 清除场上所有敌机子弹
+        for (BaseBullet bullet : enemyBullets) {
+            bullet.vanish(); // 使子弹消失
+        }
     }
 }

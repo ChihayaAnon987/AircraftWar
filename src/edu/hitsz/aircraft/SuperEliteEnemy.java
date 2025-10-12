@@ -4,6 +4,7 @@ import edu.hitsz.application.Main;
 import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.bullet.EnemyBullet;
 import edu.hitsz.prop.*;
+import edu.hitsz.strategy.ScatterShootStrategy;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -30,18 +31,23 @@ public class SuperEliteEnemy extends AbstractAircraft {
      */
     private int direction = 1;
 
-    // 定义三种道具工厂
+    // 定义四种道具工厂
     private static final PropFactory hpSupplyFactory = new HpSupplyFactory();
     private static final PropFactory fireSupplyFactory = new FireSupplyFactory();
     private static final PropFactory bombSupplyFactory = new BombSupplyFactory();
+    private static final PropFactory superFireSupplyFactory = new SuperFireSupplyFactory();
 
-    /**
-     * 散射角度范围
-     */
-    private double spreadAngle = Math.PI / 6; // 30度
+    // 道具掉落概率配置 (总和应该为100)
+    private static final int HP_SUPPLY_PROBABILITY = 25;
+    private static final int FIRE_SUPPLY_PROBABILITY = 25;
+    private static final int BOMB_SUPPLY_PROBABILITY = 10;
+    private static final int SUPER_FIRE_SUPPLY_PROBABILITY = 40;
+
 
     public SuperEliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp) {
         super(locationX, locationY, speedX, speedY, hp);
+        // 超级精英敌机使用散射策略
+        this.shootStrategy = new ScatterShootStrategy(false);
     }
 
     @Override
@@ -55,31 +61,15 @@ public class SuperEliteEnemy extends AbstractAircraft {
 
     @Override
     public List<BaseBullet> shoot() {
-        List<BaseBullet> res = new LinkedList<>();
-        int x = this.getLocationX();
-        int y = this.getLocationY() + direction * 2;
-
-        int baseSpeedX = this.speedX;
-        int baseSpeedY = this.getSpeedY();
-        int speedx;
-        int speedy = (direction > 0) ? (baseSpeedY + direction * 5) : (baseSpeedY + direction * 10);
-        BaseBullet bullet;
-
-        for (int i = 0; i < shootNum; i++) {
-            // 子弹发射位置相对飞机位置向前偏移，多颗子弹横向分散
-            // 横向速度分配：-2,0,2
-            if (i == 0) speedx = -2;
-            else if (i == 1) speedx = 0;
-            else speedx = 2;
-
-            int bx = x + (i * 2 - shootNum + 1) * 10;
-
-            // 敌机发射均为 EnemyBullet（向下或向上由 speedy 控制）
-            bullet = new EnemyBullet(bx, y, speedx + baseSpeedX, speedy, power);
-            res.add(bullet);
-        }
-
-        return res;
+        return shootStrategy.shoot(
+                this.getLocationX(),
+                this.getLocationY(),
+                this.speedX,
+                this.getSpeedY(),
+                direction,
+                shootNum,
+                power
+        );
     }
 
     @Override
@@ -105,17 +95,16 @@ public class SuperEliteEnemy extends AbstractAircraft {
         // 50%概率掉落道具
         Random random = new Random();
         if (random.nextBoolean()) {
-            // 随机生成一种道具
-            int propType = random.nextInt(3);
-            switch (propType) {
-                case 0:
-                    return hpSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
-                case 1:
-                    return fireSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
-                case 2:
-                    return bombSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
-                default:
-                    return null;
+            // 根据配置的概率生成道具
+            int propRand = random.nextInt(100);
+            if (propRand < HP_SUPPLY_PROBABILITY) {
+                return hpSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
+            } else if (propRand < HP_SUPPLY_PROBABILITY + FIRE_SUPPLY_PROBABILITY) {
+                return fireSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
+            } else if (propRand < HP_SUPPLY_PROBABILITY + FIRE_SUPPLY_PROBABILITY + BOMB_SUPPLY_PROBABILITY) {
+                return bombSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
+            } else {
+                return superFireSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
             }
         }
         return null;
