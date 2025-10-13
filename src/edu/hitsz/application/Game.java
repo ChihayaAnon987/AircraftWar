@@ -1,9 +1,6 @@
 package edu.hitsz.application;
 
-import edu.hitsz.aircraft.AbstractAircraft;
-import edu.hitsz.aircraft.EliteEnemy;
-import edu.hitsz.aircraft.HeroAircraft;
-import edu.hitsz.aircraft.MobEnemy;
+import edu.hitsz.aircraft.*;
 import edu.hitsz.basic.AbstractFlyingObject;
 import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.bullet.EnemyBullet;
@@ -48,7 +45,7 @@ public class Game extends JPanel {
     /**
      * 屏幕中出现的敌机最大数量
      */
-    private int enemyMaxNumber = 4;
+    private int enemyMaxNumber = 5;
 
     /**
      * 当前得分
@@ -71,11 +68,22 @@ public class Game extends JPanel {
      */
     private boolean gameOverFlag = false;
 
+    /**
+     * Boss 控制：生成冷却与上次生成时间（ms）
+     */
+    private final int bossCooldown = 30000; // 30s 冷却，可调整
+    private int lastBossSpawnTime = -bossCooldown; // 初始允许生成
+    // 使用工厂
+    private final AircraftFactory mobEnemyFactory = new MobEnemyFactory();
+    private final AircraftFactory eliteEnemyFactory = new EliteEnemyFactory();
+    private final AircraftFactory superEliteEnemyFactory = new SuperEliteEnemyFactory();
+    private final AircraftFactory bossEnemyFactory = new BossEnemyFactory();
+
     public Game() {
-        heroAircraft = new HeroAircraft(
+        heroAircraft = HeroAircraft.getInstance();
+        heroAircraft.setLocation(
                 Main.WINDOW_WIDTH / 2,
-                Main.WINDOW_HEIGHT - ImageManager.HERO_IMAGE.getHeight() ,
-                0, 0, 100);
+                Main.WINDOW_HEIGHT - ImageManager.HERO_IMAGE.getHeight());
 
         enemyAircrafts = new LinkedList<>();
         heroBullets = new LinkedList<>();
@@ -112,15 +120,47 @@ public class Game extends JPanel {
                 // 新敌机产生
 
                 if (enemyAircrafts.size() < enemyMaxNumber) {
-                    // 随机生成敌机，精英敌机生成概率比普通敌机小
-                    if (Math.random() < 0.2) {
-                        // 20%概率生成精英敌机
+                    // 生成策略：优先检查Boss生成条件（分数阈值），否则按概率生成超级精英/精英/普通
+                    // Boss触发分数阈值（可多次出现）
+                    int bossSpawnScoreThreshold = 500; // 可调整：达到该分数后Boss有机会出现
+                    // 检查当前场上是否已有 Boss
+                    boolean bossExists = false;
+                    for (AbstractAircraft a : enemyAircrafts) {
+                        if (a instanceof BossEnemy && !a.notValid()) {
+                            bossExists = true;
+                            break;
+                        }
+                    }
+                    // 只有在没有 Boss、且冷却时间到、且分数达到阈值时才有概率生成 Boss
+                    if (!bossExists && (time - lastBossSpawnTime >= bossCooldown) && this.score >= bossSpawnScoreThreshold && Math.random() < 0.05) {
+                        enemyAircrafts.add(bossEnemyFactory.createAircraft(
+                            (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.BOSS_IMAGE.getWidth())),
+                            (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05 + 50),
+                            2,
+                            0,
+                            1000
+                        ));
+                        // 记录生成时间，开始冷却
+                        lastBossSpawnTime = time;
+                    } else if (Math.random() < 0.1) {
+                        // 生成超级精英
+                        int superSpeedX = (int) (Math.random() * 10) - 5;
+                        if (superSpeedX == 0) superSpeedX = 1;
+                        enemyAircrafts.add(superEliteEnemyFactory.createAircraft(
+                                (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_PLUS_IMAGE.getWidth())),
+                                (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
+                                superSpeedX,
+                                6,
+                                80
+                        ));
+                    } else if (Math.random() < 0.3) {
+                        // 生成精英敌机
                         int eliteSpeedX = (int) (Math.random() * 10) - 5;
                         // 确保精英敌机的speedX不为0
                         if (eliteSpeedX == 0) {
                             eliteSpeedX = 1;
                         }
-                        enemyAircrafts.add(new EliteEnemy(
+                        enemyAircrafts.add(eliteEnemyFactory.createAircraft(
                                 (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_ENEMY_IMAGE.getWidth())),
                                 (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
                                 eliteSpeedX,
@@ -128,8 +168,8 @@ public class Game extends JPanel {
                                 50
                         ));
                     } else {
-                        // 80%概率生成普通敌机
-                        enemyAircrafts.add(new MobEnemy(
+                        // 其余概率生成普通敌机
+                        enemyAircrafts.add(mobEnemyFactory.createAircraft(
                                 (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.MOB_ENEMY_IMAGE.getWidth())),
                                 (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
                                 0,
@@ -264,8 +304,22 @@ public class Game extends JPanel {
                     bullet.vanish();
                     if (enemyAircraft.notValid()) {
                         // 获得分数，产生道具补给
-                        // 精英敌机得20分，普通敌机得10分
-                        if (enemyAircraft instanceof EliteEnemy) {
+                        // 区分 Boss、超级精英、精英与普通的得分与掉落
+                        if (enemyAircraft instanceof BossEnemy) {
+                            // 击毁 Boss 获得高分
+                            score += 100;
+                            List<BaseProp> dropList = ((BossEnemy) enemyAircraft).dropProps();
+                            if (dropList != null && !dropList.isEmpty()) {
+                                props.addAll(dropList);
+                            }
+                        } else if (enemyAircraft instanceof SuperEliteEnemy) {
+                            // 超级精英获得中等分
+                            score += 30;
+                            BaseProp prop = ((SuperEliteEnemy) enemyAircraft).dropProp();
+                            if (prop != null) {
+                                props.add(prop);
+                            }
+                        } else if (enemyAircraft instanceof EliteEnemy) {
                             score += 20;
                             // 精英敌机有几率掉落道具
                             BaseProp prop = ((EliteEnemy) enemyAircraft).dropProp();
@@ -273,6 +327,7 @@ public class Game extends JPanel {
                                 props.add(prop);
                             }
                         } else {
+                            // 普通敌机
                             score += 10;
                         }
                     }
