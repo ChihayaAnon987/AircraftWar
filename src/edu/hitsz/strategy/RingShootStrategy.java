@@ -13,7 +13,7 @@ import java.util.List;
 public class RingShootStrategy implements ShootStrategy {
     private boolean isHero;
 
-    public static int RING_SHOOT_DURATION = 5000;
+    public static int RING_SHOOT_DURATION = 15000;
 
     public RingShootStrategy(boolean isHero) {
         this.isHero = isHero;
@@ -21,7 +21,7 @@ public class RingShootStrategy implements ShootStrategy {
 
     @Override
     public List<BaseBullet> shoot(int x, int y, int speedX, int speedY, int direction, int shootNum, int power) {
-        /**
+        /*
          * 子弹伤害
          */
         int actualPower = (direction > 0) ? 10 : 30;

@@ -8,12 +8,13 @@ import java.util.*;
  * 排行榜管理类
  */
 public class LeaderboardManager {
-    private static final String SCORE_FILE = "scores.txt"; // 改为txt文件
     private static final int MAX_RECORDS = 20; // 只保留前20名记录
     private List<ScoreRecord> records;
+    private ScoreDao scoreDao;
 
     public LeaderboardManager() {
         records = new ArrayList<>();
+        scoreDao = new FileScoreDao(); // 使用文件数据访问对象
         loadScores();
     }
 
@@ -82,50 +83,16 @@ public class LeaderboardManager {
     }
 
     /**
-     * 从文件加载分数记录
+     * 从数据源加载分数记录
      */
     private void loadScores() {
-        try (BufferedReader br = new BufferedReader(new FileReader(SCORE_FILE))) {
-            String line;
-            records = new ArrayList<>();
-            while ((line = br.readLine()) != null) {
-                // 解析每行数据：玩家名,分数,日期
-                String[] parts = line.split(",");
-                if (parts.length == 3) {
-                    try {
-                        String playerName = parts[0];
-                        int score = Integer.parseInt(parts[1]);
-                        SimpleDateFormat sdf = new SimpleDateFormat("MM-dd HH:mm");
-                        Date date = sdf.parse(parts[2]);
-                        records.add(new ScoreRecord(playerName, score, date));
-                    } catch (Exception e) {
-                        System.err.println("记录解析错误: " + e.getMessage());
-                    }
-                }
-            }
-        } catch (FileNotFoundException e) {
-            // 文件不存在，创建新文件
-            saveScores(); // 创建空文件
-        } catch (IOException e) {
-            System.err.println("加载分数记录时出错: " + e.getMessage());
-            records = new ArrayList<>();
-        }
+        records = scoreDao.loadScores();
     }
 
     /**
-     * 将分数记录保存到文件
+     * 将分数记录保存到数据源
      */
     private void saveScores() {
-        try (PrintWriter pw = new PrintWriter(new FileWriter(SCORE_FILE))) {
-            for (ScoreRecord record : records) {
-                SimpleDateFormat sdf = new SimpleDateFormat("MM-dd HH:mm");
-                pw.printf("%s,%d,%s\n", 
-                    record.getPlayerName(), 
-                    record.getScore(), 
-                    sdf.format(record.getDate()));
-            }
-        } catch (IOException e) {
-            System.err.println("保存分数记录时出错: " + e.getMessage());
-        }
+        scoreDao.saveScores(records);
     }
 }

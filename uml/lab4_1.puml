@@ -1,0 +1,69 @@
+@startuml
+' Strategy Pattern UML Class Diagram for Aircraft War Game
+
+' Interface
+interface ShootStrategy {
+    +List<BaseBullet> shoot(int x, int y, int speedX, int speedY, int direction, int shootNum, int power)
+}
+
+' Concrete Strategies
+class StraightShootStrategy {
+    -boolean isHero
+    +List<BaseBullet> shoot(int x, int y, int speedX, int speedY, int direction, int shootNum, int power)
+}
+
+class ScatterShootStrategy {
+    -boolean isHero
+    +List<BaseBullet> shoot(int x, int y, int speedX, int speedY, int direction, int shootNum, int power)
+}
+
+class RingShootStrategy {
+    -boolean isHero
+    +List<BaseBullet> shoot(int x, int y, int speedX, int speedY, int direction, int shootNum, int power)
+}
+
+class NoneShootStrategy {
+    +List<BaseBullet> shoot(int x, int y, int speedX, int speedY, int direction, int shootNum, int power)
+}
+
+' Context
+abstract AbstractAircraft {
+    #ShootStrategy shootStrategy
+    +List<BaseBullet> shoot()
+    +int getDirection()
+    +int getShootNum()
+    +int getPower()
+}
+
+' Concrete Contexts
+class HeroAircraft {
+    +List<BaseBullet> shoot()
+}
+
+class MobEnemy {
+    +List<BaseBullet> shoot()
+}
+
+class EliteEnemy {
+    +List<BaseBullet> shoot()
+}
+
+class BossEnemy {
+    +List<BaseBullet> shoot()
+}
+
+' Relationships
+ShootStrategy <|.. StraightShootStrategy
+ShootStrategy <|.. ScatterShootStrategy
+ShootStrategy <|.. RingShootStrategy
+ShootStrategy <|.. NoneShootStrategy
+
+AbstractAircraft --> ShootStrategy
+HeroAircraft --|> AbstractAircraft
+MobEnemy --|> AbstractAircraft
+EliteEnemy --|> AbstractAircraft
+BossEnemy --|> AbstractAircraft
+
+
+
+@enduml
