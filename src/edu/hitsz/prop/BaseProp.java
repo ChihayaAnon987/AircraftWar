@@ -37,7 +37,7 @@ public abstract class BaseProp extends AbstractFlyingObject {
             heroAircraft.setShootNum(newBulletCount);
         }
         try {
-            Thread.sleep(10000); // 道具效果持续的时间
+            Thread.sleep(1000000); // 道具效果持续的时间
         } catch (InterruptedException e) {
             e.printStackTrace();
             return;

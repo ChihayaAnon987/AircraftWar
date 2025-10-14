@@ -1,0 +1,52 @@
+@startuml
+' DAO Pattern UML Class Diagram for Aircraft War Game
+
+' Entity
+class ScoreRecord {
+    - playerName: String
+    - score: int
+    - date: Date
+    + ScoreRecord(String playerName, int score)
+    + ScoreRecord(String playerName, int score, Date date)
+    + getPlayerName(): String
+    + getScore(): int
+    + getDate(): Date
+    + compareTo(ScoreRecord other): int
+    + toString(): String
+}
+
+' DAO Interface
+interface ScoreDao {
+    + saveScores(List<ScoreRecord> records)
+    + loadScores(): List<ScoreRecord>
+}
+
+' DAO Implementation
+class FileScoreDao {
+    - SCORE_FILE: String
+    + saveScores(List<ScoreRecord> records)
+    + loadScores(): List<ScoreRecord>
+}
+
+' Business Logic
+class LeaderboardManager {
+    - MAX_RECORDS: int
+    - records: List<ScoreRecord>
+    - scoreDao: ScoreDao
+    + LeaderboardManager()
+    + addRecord(String playerName, int score)
+    + displayLeaderboard()
+    + getNextAnonymousName(): String
+    - loadScores()
+    - saveScores()
+}
+
+' Relationships
+ScoreDao <|.. FileScoreDao
+LeaderboardManager --> ScoreDao
+LeaderboardManager --> ScoreRecord
+FileScoreDao --> ScoreRecord
+
+
+
+@enduml

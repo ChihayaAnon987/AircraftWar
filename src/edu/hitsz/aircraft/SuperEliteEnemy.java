@@ -3,27 +3,23 @@ package edu.hitsz.aircraft;
 import edu.hitsz.application.Main;
 import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.bullet.EnemyBullet;
-import edu.hitsz.bullet.HeroBullet;
 import edu.hitsz.prop.*;
-import edu.hitsz.strategy.StraightShootStrategy;
-
+import edu.hitsz.strategy.ScatterShootStrategy;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
 /**
- * 精英敌机
- * 可以射击
+ * 超级精英敌机
+ * 实现散射弹道
  *
  * @author ChihayaAnon
  */
-public class EliteEnemy extends AbstractAircraft {
-    /**攻击方式 */
-
+public class SuperEliteEnemy extends AbstractAircraft {
     /**
-     * 子弹一次发射数量
+     * 子弹发射数量
      */
-    private int shootNum = 1;
+    private int shootNum = 3;
 
     /**
      * 子弹伤害
@@ -35,35 +31,34 @@ public class EliteEnemy extends AbstractAircraft {
      */
     private int direction = 1;
 
-    // 定义三种道具工厂
+    // 定义四种道具工厂
     private static final PropFactory hpSupplyFactory = new HpSupplyFactory();
     private static final PropFactory fireSupplyFactory = new FireSupplyFactory();
     private static final PropFactory bombSupplyFactory = new BombSupplyFactory();
-    
-    // 道具掉落概率配置 (总和应该为100)
-    private static final int HP_SUPPLY_PROBABILITY = 50;
-    private static final int FIRE_SUPPLY_PROBABILITY = 20;
-    private static final int BOMB_SUPPLY_PROBABILITY = 30;
+    private static final PropFactory superFireSupplyFactory = new SuperFireSupplyFactory();
 
-    public EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp) {
+    // 道具掉落概率配置 (总和应该为100)
+    private static final int HP_SUPPLY_PROBABILITY = 25;
+    private static final int FIRE_SUPPLY_PROBABILITY = 25;
+    private static final int BOMB_SUPPLY_PROBABILITY = 10;
+    private static final int SUPER_FIRE_SUPPLY_PROBABILITY = 40;
+
+
+    public SuperEliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp) {
         super(locationX, locationY, speedX, speedY, hp);
-        // 精英敌机使用直射策略
-        this.shootStrategy = new StraightShootStrategy(false);
+        // 超级精英敌机使用散射策略
+        this.shootStrategy = new ScatterShootStrategy(false);
     }
 
     @Override
     public void forward() {
         super.forward();
         // 判定 y 轴向下飞行出界
-        if (locationY >= Main.WINDOW_HEIGHT ) {
+        if (locationY >= Main.WINDOW_HEIGHT) {
             vanish();
         }
     }
 
-    /**
-     * 通过射击产生子弹
-     * @return 射击出的子弹List
-     */
     @Override
     public List<BaseBullet> shoot() {
         return shootStrategy.shoot(
@@ -93,7 +88,7 @@ public class EliteEnemy extends AbstractAircraft {
     }
 
     /**
-     * 精英敌机坠毁后随机掉落道具
+     * 超级精英敌机坠毁后随机掉落道具
      * @return 掉落的道具，如果没有掉落则返回 null
      */
     public BaseProp dropProp() {
@@ -106,8 +101,10 @@ public class EliteEnemy extends AbstractAircraft {
                 return hpSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
             } else if (propRand < HP_SUPPLY_PROBABILITY + FIRE_SUPPLY_PROBABILITY) {
                 return fireSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
-            } else {
+            } else if (propRand < HP_SUPPLY_PROBABILITY + FIRE_SUPPLY_PROBABILITY + BOMB_SUPPLY_PROBABILITY) {
                 return bombSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
+            } else {
+                return superFireSupplyFactory.createProp(this.getLocationX(), this.getLocationY(), 0, 3);
             }
         }
         return null;
