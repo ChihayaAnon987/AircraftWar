@@ -184,7 +184,7 @@ public class Game extends JPanel {
                         }
                     }
                     // 只有在没有 Boss、且冷却时间到、且分数达到阈值时才有概率生成 Boss
-                    if (!bossExists && (time - lastBossSpawnTime >= bossCooldown) && this.score >= bossSpawnScoreThreshold && Math.random() < 0.05) {
+                    if (!bossExists && (time - lastBossSpawnTime >= bossCooldown) && this.score >= bossSpawnScoreThreshold && Math.random() < 0.1) {
                         BossEnemy boss = (BossEnemy) bossEnemyFactory.createAircraft(
                             (int) (Math.random() * (edu.hitsz.application.Main.WINDOW_WIDTH - edu.hitsz.application.ImageManager.BOSS_IMAGE.getWidth())),
                             (int) (Math.random() * edu.hitsz.application.Main.WINDOW_HEIGHT * 0.05 + 50),
@@ -195,6 +195,12 @@ public class Game extends JPanel {
                         enemyAircrafts.add(boss);
                         // 记录生成时间，开始冷却
                         lastBossSpawnTime = time;
+                        
+                        // 停止普通背景音乐
+                        if (bgmThread != null) {
+                            musicPlayer.stopMusic(bgmThread);
+                            bgmThread = null;
+                        }
                         
                         // 播放Boss背景音乐
                         if (bossBgmThread != null) {
@@ -385,9 +391,7 @@ public class Game extends JPanel {
                 //损失生命值
                 heroAircraft.decreaseHp(bullet.getPower());
                 bullet.vanish();
-                
-                // 播放子弹击中音效
-                musicPlayer.playMusic("src/videos/bullet_hit.wav");
+
             }
         }
 
@@ -420,6 +424,16 @@ public class Game extends JPanel {
                             List<BaseProp> dropList = ((BossEnemy) enemyAircraft).dropProps();
                             if (dropList != null && !dropList.isEmpty()) {
                                 props.addAll(dropList);
+                            }
+                            
+                            // 停止播放Boss背景音乐，恢复普通背景音乐
+                            if (bossBgmThread != null) {
+                                musicPlayer.stopMusic(bossBgmThread);
+                                bossBgmThread = null;
+                            }
+                            // 如果游戏还没有结束且普通背景音乐线程为空，则重新播放普通背景音乐
+                            if (!gameOverFlag && bgmThread == null) {
+                                bgmThread = musicPlayer.playMusic("src/videos/bgm.wav");
                             }
                         } else if (enemyAircraft instanceof SuperEliteEnemy) {
                             // 超级精英获得中等分
