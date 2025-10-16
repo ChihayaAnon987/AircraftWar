@@ -117,6 +117,8 @@ public class Game extends JPanel {
             }
         });
         this.add(returnButton);
+        // 游戏开始时隐藏返回按钮
+        returnButton.setVisible(false);
 
         heroAircraft = HeroAircraft.getInstance();
         // 重置英雄机状态
@@ -270,6 +272,9 @@ public class Game extends JPanel {
                 // 游戏结束
                 gameOverFlag = true;
                 executorService.shutdown();
+                
+                // 显示返回按钮
+                returnButton.setVisible(true);
                 
                 // 停止所有音乐播放
                 if (bgmThread != null) {
