@@ -36,7 +36,6 @@ public class Menu{
         hardPanel = new JPanel();
         musicPanel = new JPanel();
         mainPanel = new JPanel();
-        // 移除了 rankButton 的初始化
 
         // 布局设置
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
@@ -52,7 +51,6 @@ public class Menu{
         mainPanel.add(mediumPanel);
         mainPanel.add(hardPanel);
         mainPanel.add(musicPanel);
-        // 移除了 rankPanel 的添加
 
         /*
          * 点击按钮，选择游戏难度

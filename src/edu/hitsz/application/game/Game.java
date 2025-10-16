@@ -195,8 +195,7 @@ public class Game extends JPanel {
                             1000
                         );
                         enemyAircrafts.add(boss);
-                        // 记录生成时间，开始冷却
-                        lastBossSpawnTime = time;
+
                         
                         // 停止普通背景音乐
                         if (bgmThread != null) {
@@ -287,6 +286,9 @@ public class Game extends JPanel {
                 // 播放游戏结束音效
                 musicPlayer.playMusic("src/videos/game_over.wav");
 
+                // 跳转到排行榜界面并刷新
+                edu.hitsz.application.Main.cardLayout.show(edu.hitsz.application.Main.cardPanel, targetRankPage);
+
                 // 获取玩家姓名并记录分数
                 String playerName = JOptionPane.showInputDialog(
                     null, 
@@ -302,10 +304,7 @@ public class Game extends JPanel {
                 
                 // 添加记录到排行榜
                 leaderboardManager.addRecord(playerName, score);
-                
-                // 跳转到排行榜界面并刷新
-                edu.hitsz.application.Main.cardLayout.show(edu.hitsz.application.Main.cardPanel, targetRankPage);
-                
+
                 // 刷新对应的排行榜以显示最新记录
                 switch (targetRankPage) {
                     case "EASY_RANK":
@@ -426,6 +425,8 @@ public class Game extends JPanel {
                         if (enemyAircraft instanceof BossEnemy) {
                             // 击毁 Boss 获得高分
                             score += 100;
+                            // 记录Boss死亡时间，开始冷却
+                            lastBossSpawnTime = time;
                             List<BaseProp> dropList = ((BossEnemy) enemyAircraft).dropProps();
                             if (dropList != null && !dropList.isEmpty()) {
                                 props.addAll(dropList);

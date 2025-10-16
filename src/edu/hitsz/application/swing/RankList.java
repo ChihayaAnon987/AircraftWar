@@ -124,39 +124,6 @@ public class RankList {
     }
 
     /**
-     * 输入玩家名称，存入对应游戏难度的榜单中
-     * @param score
-     * @param level
-     */
-    public void inputRecord(int score, int level){
-        String input;
-        input = JOptionPane.showInputDialog(null, "游戏结束，您的分数为"+score+",\n"+"请输入名字记录得分：");
-        if (input == null ) {
-            JOptionPane.showMessageDialog(null, "未成功保存数据", "warning",JOptionPane.WARNING_MESSAGE);
-        }else{
-            if(input.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "未输入名字，您的名字将为 John Doe ！", "warning",JOptionPane.WARNING_MESSAGE);
-                input = "John Doe";
-            }
-            
-            //创建新记录
-            ScoreRecord record = new ScoreRecord(input, score);
-            try {
-                //添加记录到列表
-                records.add(record);
-                //排序
-                records.sort(null);
-                //保存数据
-                scoreDao.saveScores(records, level);
-                //刷新显示
-                showRankList(level);
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(null, "保存记录失败: " + e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
-
-    /**
      * 根据游戏难度显示排行榜
      */
     public void showRankList(int level){
