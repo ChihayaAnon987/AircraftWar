@@ -2,9 +2,9 @@ package edu.hitsz.aircraft;
 
 import edu.hitsz.application.Main;
 import edu.hitsz.bullet.BaseBullet;
-import edu.hitsz.bullet.EnemyBullet;
 import edu.hitsz.prop.*;
 import edu.hitsz.strategy.RingShootStrategy;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;

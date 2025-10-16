@@ -1,7 +1,7 @@
 package edu.hitsz.scores;
 
-import java.io.*;
-import java.util.*;
+import java.io.Serializable;
+import java.util.Date;
 
 /**
  * 分数记录类，用于存储单条分数记录

@@ -1,6 +1,5 @@
 package edu.hitsz.scores;
 
-import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -11,8 +10,10 @@ public class LeaderboardManager {
     private static final int MAX_RECORDS = 20; // 只保留前20名记录
     private List<ScoreRecord> records;
     private ScoreDao scoreDao;
+    private int level; // 难度等级
 
-    public LeaderboardManager() {
+    public LeaderboardManager(int level) {
+        this.level = level;
         records = new ArrayList<>();
         scoreDao = new FileScoreDao(); // 使用文件数据访问对象
         loadScores();
@@ -86,13 +87,13 @@ public class LeaderboardManager {
      * 从数据源加载分数记录
      */
     private void loadScores() {
-        records = scoreDao.loadScores();
+        records = scoreDao.loadScores(level);
     }
 
     /**
      * 将分数记录保存到数据源
      */
     private void saveScores() {
-        scoreDao.saveScores(records);
+        scoreDao.saveScores(records, level);
     }
 }

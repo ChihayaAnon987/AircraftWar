@@ -1,18 +1,21 @@
-package edu.hitsz.application;
+package edu.hitsz.application.game;
 
 import edu.hitsz.aircraft.*;
+import edu.hitsz.application.HeroController;
+import edu.hitsz.application.music.MusicPlayer;
+import edu.hitsz.application.music.MusicThread;
 import edu.hitsz.basic.AbstractFlyingObject;
 import edu.hitsz.bullet.BaseBullet;
-import edu.hitsz.bullet.EnemyBullet;
-import edu.hitsz.bullet.HeroBullet;
 import edu.hitsz.prop.BaseProp;
 import edu.hitsz.scores.LeaderboardManager;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.util.*;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -83,13 +86,46 @@ public class Game extends JPanel {
     /**
      * 排行榜管理器
      */
-    private final LeaderboardManager leaderboardManager = new LeaderboardManager();
+    protected LeaderboardManager leaderboardManager;
+    
+    private JButton returnButton;
+    
+    // 游戏结束后跳转的目标界面
+    protected String targetRankPage = "EASY_RANK";
+    
+    // 难度等级
+    protected int level = 1;
+    
+    // 不同难度的背景图片
+    protected BufferedImage backgroundImage;
+
+    // 音乐播放器和音乐线程
+    private MusicPlayer musicPlayer = MusicPlayer.getMusicPlayer();
+    private MusicThread bgmThread = null;
+    private MusicThread bossBgmThread = null;
+
+
+
 
     public Game() {
+        // 添加返回按钮
+        returnButton = new JButton("返回主菜单");
+        returnButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                edu.hitsz.application.Main.cardLayout.show(edu.hitsz.application.Main.cardPanel, "MENU");
+            }
+        });
+        this.add(returnButton);
+
         heroAircraft = HeroAircraft.getInstance();
+        // 重置英雄机状态
+        heroAircraft.setHp(1000);
         heroAircraft.setLocation(
-                Main.WINDOW_WIDTH / 2,
-                Main.WINDOW_HEIGHT - ImageManager.HERO_IMAGE.getHeight());
+                edu.hitsz.application.Main.WINDOW_WIDTH / 2,
+                edu.hitsz.application.Main.WINDOW_HEIGHT - edu.hitsz.application.ImageManager.HERO_IMAGE.getHeight());
+        // 重置射击模式
+        heroAircraft.resetShootMode();
 
         enemyAircrafts = new LinkedList<>();
         heroBullets = new LinkedList<>();
@@ -107,12 +143,22 @@ public class Game extends JPanel {
         //启动英雄机鼠标监听
         new HeroController(this, heroAircraft);
 
+        // 初始化排行榜管理器
+        leaderboardManager = new LeaderboardManager(level);
+
+        // 重置游戏状态
+        gameOverFlag = false;
+
+
     }
 
     /**
      * 游戏启动入口，执行游戏逻辑
      */
     public void action() {
+        
+        // 开始播放背景音乐
+        bgmThread = musicPlayer.playMusic("src/videos/bgm.wav");
 
         // 定时任务：绘制、对象产生、碰撞判定、击毁及结束判定
         Runnable task = () -> {
@@ -139,22 +185,29 @@ public class Game extends JPanel {
                     }
                     // 只有在没有 Boss、且冷却时间到、且分数达到阈值时才有概率生成 Boss
                     if (!bossExists && (time - lastBossSpawnTime >= bossCooldown) && this.score >= bossSpawnScoreThreshold && Math.random() < 0.05) {
-                        enemyAircrafts.add(bossEnemyFactory.createAircraft(
-                            (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.BOSS_IMAGE.getWidth())),
-                            (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05 + 50),
+                        BossEnemy boss = (BossEnemy) bossEnemyFactory.createAircraft(
+                            (int) (Math.random() * (edu.hitsz.application.Main.WINDOW_WIDTH - edu.hitsz.application.ImageManager.BOSS_IMAGE.getWidth())),
+                            (int) (Math.random() * edu.hitsz.application.Main.WINDOW_HEIGHT * 0.05 + 50),
                             2,
                             0,
                             1000
-                        ));
+                        );
+                        enemyAircrafts.add(boss);
                         // 记录生成时间，开始冷却
                         lastBossSpawnTime = time;
+                        
+                        // 播放Boss背景音乐
+                        if (bossBgmThread != null) {
+                            musicPlayer.stopMusic(bossBgmThread);
+                        }
+                        bossBgmThread = musicPlayer.playMusic("src/videos/bgm_boss.wav");
                     } else if (Math.random() < 0.1) {
                         // 生成超级精英
                         int superSpeedX = (int) (Math.random() * 10) - 5;
                         if (superSpeedX == 0) superSpeedX = 1;
                         enemyAircrafts.add(superEliteEnemyFactory.createAircraft(
-                                (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_PLUS_IMAGE.getWidth())),
-                                (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
+                                (int) (Math.random() * (edu.hitsz.application.Main.WINDOW_WIDTH - edu.hitsz.application.ImageManager.ELITE_PLUS_IMAGE.getWidth())),
+                                (int) (Math.random() * edu.hitsz.application.Main.WINDOW_HEIGHT * 0.05),
                                 superSpeedX,
                                 6,
                                 80
@@ -167,8 +220,8 @@ public class Game extends JPanel {
                             eliteSpeedX = 1;
                         }
                         enemyAircrafts.add(eliteEnemyFactory.createAircraft(
-                                (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_ENEMY_IMAGE.getWidth())),
-                                (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
+                                (int) (Math.random() * (edu.hitsz.application.Main.WINDOW_WIDTH - edu.hitsz.application.ImageManager.ELITE_ENEMY_IMAGE.getWidth())),
+                                (int) (Math.random() * edu.hitsz.application.Main.WINDOW_HEIGHT * 0.05),
                                 eliteSpeedX,
                                 5,
                                 50
@@ -176,8 +229,8 @@ public class Game extends JPanel {
                     } else {
                         // 其余概率生成普通敌机
                         enemyAircrafts.add(mobEnemyFactory.createAircraft(
-                                (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.MOB_ENEMY_IMAGE.getWidth())),
-                                (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
+                                (int) (Math.random() * (edu.hitsz.application.Main.WINDOW_WIDTH - edu.hitsz.application.ImageManager.MOB_ENEMY_IMAGE.getWidth())),
+                                (int) (Math.random() * edu.hitsz.application.Main.WINDOW_HEIGHT * 0.05),
                                 0,
                                 10,
                                 30
@@ -207,11 +260,22 @@ public class Game extends JPanel {
             repaint();
 
             // 游戏结束检查英雄机是否存活
-            if (heroAircraft.getHp() <= 0) {
+            if (heroAircraft.getHp() <= 0 && !gameOverFlag) {
                 // 游戏结束
-                executorService.shutdown();
                 gameOverFlag = true;
+                executorService.shutdown();
                 
+                // 停止所有音乐播放
+                if (bgmThread != null) {
+                    musicPlayer.stopMusic(bgmThread);
+                }
+                if (bossBgmThread != null) {
+                    musicPlayer.stopMusic(bossBgmThread);
+                }
+                
+                // 播放游戏结束音效
+                musicPlayer.playMusic("src/videos/game_over.wav");
+
                 // 获取玩家姓名并记录分数
                 String playerName = JOptionPane.showInputDialog(
                     null, 
@@ -228,13 +292,26 @@ public class Game extends JPanel {
                 // 添加记录到排行榜
                 leaderboardManager.addRecord(playerName, score);
                 
-                // 显示排行榜
-                leaderboardManager.displayLeaderboard();
+                // 跳转到排行榜界面并刷新
+                edu.hitsz.application.Main.cardLayout.show(edu.hitsz.application.Main.cardPanel, targetRankPage);
+                
+                // 刷新对应的排行榜以显示最新记录
+                switch (targetRankPage) {
+                    case "EASY_RANK":
+                        edu.hitsz.application.Main.easyRank.refreshRankList();
+                        break;
+                    case "MEDIUM_RANK":
+                        edu.hitsz.application.Main.mediumRank.refreshRankList();
+                        break;
+                    case "HARD_RANK":
+                        edu.hitsz.application.Main.hardRank.refreshRankList();
+                        break;
+                }
             }
 
         };
 
-        /**
+        /*
          * 以固定延迟时间进行执行
          * 本次任务执行完成后，需要延迟设定的延迟时间，才会执行新的任务
          */
@@ -259,13 +336,14 @@ public class Game extends JPanel {
 
     private void shootAction() {
         // 敌机射击
-        for (AbstractAircraft enemyAircraft : enemyAircrafts){
+        for (AbstractAircraft enemyAircraft : enemyAircrafts) {
             enemyBullets.addAll(enemyAircraft.shoot());
+//                musicPlayer.playMusic("src/videos/bullet.wav");
         }
-
 
         // 英雄射击
         heroBullets.addAll(heroAircraft.shoot());
+//            musicPlayer.playMusic("src/videos/bullet.wav");
     }
 
     private void bulletsMoveAction() {
@@ -307,6 +385,9 @@ public class Game extends JPanel {
                 //损失生命值
                 heroAircraft.decreaseHp(bullet.getPower());
                 bullet.vanish();
+                
+                // 播放子弹击中音效
+                musicPlayer.playMusic("src/videos/bullet_hit.wav");
             }
         }
 
@@ -326,6 +407,10 @@ public class Game extends JPanel {
                     // 敌机损失一定生命值
                     enemyAircraft.decreaseHp(bullet.getPower());
                     bullet.vanish();
+                    
+                    // 播放子弹击中音效
+                    musicPlayer.playMusic("src/videos/bullet_hit.wav");
+                    
                     if (enemyAircraft.notValid()) {
                         // 获得分数，产生道具补给
                         // 区分 Boss、超级精英、精英与普通的得分与掉落
@@ -360,6 +445,9 @@ public class Game extends JPanel {
                 if (enemyAircraft.crash(heroAircraft) || heroAircraft.crash(enemyAircraft)) {
                     enemyAircraft.vanish();
                     heroAircraft.decreaseHp(Integer.MAX_VALUE);
+                    
+                    // 播放子弹击中音效
+                    musicPlayer.playMusic("src/videos/bullet_hit.wav");
                 }
             }
         }
@@ -373,6 +461,9 @@ public class Game extends JPanel {
                 // 道具与英雄机碰撞
                 prop.effect(heroAircraft, enemyAircrafts, enemyBullets);
                 prop.vanish();
+                
+                // 播放道具生效音效
+                musicPlayer.playMusic("src/videos/get_supply.wav");
             }
         }
 
@@ -402,17 +493,16 @@ public class Game extends JPanel {
      * 重写paint方法
      * 通过重复调用paint方法，实现游戏动画
      *
-     * @param  g
      */
     @Override
     public void paint(Graphics g) {
         super.paint(g);
 
         // 绘制背景,图片滚动
-        g.drawImage(ImageManager.BACKGROUND_IMAGE, 0, this.backGroundTop - Main.WINDOW_HEIGHT, null);
-        g.drawImage(ImageManager.BACKGROUND_IMAGE, 0, this.backGroundTop, null);
+        g.drawImage(backgroundImage, 0, this.backGroundTop - edu.hitsz.application.Main.WINDOW_HEIGHT, null);
+        g.drawImage(backgroundImage, 0, this.backGroundTop, null);
         this.backGroundTop += 1;
-        if (this.backGroundTop == Main.WINDOW_HEIGHT) {
+        if (this.backGroundTop == edu.hitsz.application.Main.WINDOW_HEIGHT) {
             this.backGroundTop = 0;
         }
 
@@ -424,8 +514,8 @@ public class Game extends JPanel {
 
         paintImageWithPositionRevised(g, enemyAircrafts);
 
-        g.drawImage(ImageManager.HERO_IMAGE, heroAircraft.getLocationX() - ImageManager.HERO_IMAGE.getWidth() / 2,
-                heroAircraft.getLocationY() - ImageManager.HERO_IMAGE.getHeight() / 2, null);
+        g.drawImage(edu.hitsz.application.ImageManager.HERO_IMAGE, heroAircraft.getLocationX() - edu.hitsz.application.ImageManager.HERO_IMAGE.getWidth() / 2,
+                heroAircraft.getLocationY() - edu.hitsz.application.ImageManager.HERO_IMAGE.getHeight() / 2, null);
 
         //绘制得分和生命值
         paintScoreAndLife(g);

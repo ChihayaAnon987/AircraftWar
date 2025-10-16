@@ -1,11 +1,10 @@
 package edu.hitsz.aircraft;
 
 import edu.hitsz.bullet.BaseBullet;
-import edu.hitsz.bullet.HeroBullet;
 import edu.hitsz.strategy.RingShootStrategy;
 import edu.hitsz.strategy.ScatterShootStrategy;
 import edu.hitsz.strategy.StraightShootStrategy;
-import java.util.LinkedList;
+
 import java.util.List;
 
 /**
@@ -19,7 +18,7 @@ public class HeroAircraft extends AbstractAircraft {
      */
     private static HeroAircraft instance = null;
 
-    /**攻击方式 */
+    /*攻击方式 */
 
     /**
      * 子弹一次发射数量
@@ -58,6 +57,10 @@ public class HeroAircraft extends AbstractAircraft {
         super(locationX, locationY, speedX, speedY, hp);
         // 英雄机默认使用直射策略
         this.shootStrategy = new StraightShootStrategy(true);
+    }
+
+    public void setHp(int hp) {
+        this.hp = hp;
     }
 
 

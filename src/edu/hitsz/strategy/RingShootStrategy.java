@@ -13,7 +13,7 @@ import java.util.List;
 public class RingShootStrategy implements ShootStrategy {
     private boolean isHero;
 
-    public static int RING_SHOOT_DURATION = 15000;
+    public static int RING_SHOOT_DURATION = 5000;
 
     public RingShootStrategy(boolean isHero) {
         this.isHero = isHero;

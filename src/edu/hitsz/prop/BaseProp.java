@@ -1,14 +1,11 @@
 package edu.hitsz.prop;
 
 import edu.hitsz.aircraft.AbstractAircraft;
-import edu.hitsz.aircraft.EliteEnemy;
 import edu.hitsz.aircraft.HeroAircraft;
 import edu.hitsz.basic.AbstractFlyingObject;
 import edu.hitsz.bullet.BaseBullet;
 
 import java.util.List;
-import java.util.Timer;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 所有种类道具的抽象父类：

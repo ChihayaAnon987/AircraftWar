@@ -9,12 +9,14 @@ public interface ScoreDao {
     /**
      * 保存分数记录列表
      * @param records 分数记录列表
+     * @param level 难度等级
      */
-    void saveScores(List<ScoreRecord> records);
+    void saveScores(List<ScoreRecord> records, int level);
 
     /**
      * 加载分数记录列表
+     * @param level 难度等级
      * @return 分数记录列表
      */
-    List<ScoreRecord> loadScores();
+    List<ScoreRecord> loadScores(int level);
 }

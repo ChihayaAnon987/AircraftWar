@@ -10,11 +10,23 @@ import java.util.List;
  * 基于文件的分数记录数据访问对象实现
  */
 public class FileScoreDao implements ScoreDao {
-    private static final String SCORE_FILE = "scores.txt";
+    private static final String EASY_SCORE_FILE = "easy_scores.txt";
+    private static final String MEDIUM_SCORE_FILE = "medium_scores.txt";
+    private static final String HARD_SCORE_FILE = "hard_scores.txt";
+
+    private String getScoreFileByLevel(int level) {
+        switch (level) {
+            case 1: return EASY_SCORE_FILE;
+            case 2: return MEDIUM_SCORE_FILE;
+            case 3: return HARD_SCORE_FILE;
+            default: return EASY_SCORE_FILE;
+        }
+    }
 
     @Override
-    public void saveScores(List<ScoreRecord> records) {
-        try (PrintWriter pw = new PrintWriter(new FileWriter(SCORE_FILE))) {
+    public void saveScores(List<ScoreRecord> records, int level) {
+        String scoreFile = getScoreFileByLevel(level);
+        try (PrintWriter pw = new PrintWriter(new FileWriter(scoreFile))) {
             for (ScoreRecord record : records) {
                 SimpleDateFormat sdf = new SimpleDateFormat("MM-dd HH:mm");
                 pw.printf("%s,%d,%s\n", 
@@ -28,9 +40,10 @@ public class FileScoreDao implements ScoreDao {
     }
 
     @Override
-    public List<ScoreRecord> loadScores() {
+    public List<ScoreRecord> loadScores(int level) {
+        String scoreFile = getScoreFileByLevel(level);
         List<ScoreRecord> records = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(SCORE_FILE))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(scoreFile))) {
             String line;
             while ((line = br.readLine()) != null) {
                 // 解析每行数据：玩家名,分数,日期

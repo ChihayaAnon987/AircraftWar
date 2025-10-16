@@ -13,7 +13,7 @@ import java.util.List;
 public class ScatterShootStrategy implements ShootStrategy {
     private boolean isHero;
 
-    public static int SCATTER_SHOOT_DURATION = 50000;
+    public static int SCATTER_SHOOT_DURATION = 5000;
 
     public ScatterShootStrategy(boolean isHero) {
         this.isHero = isHero;
