@@ -11,4 +11,9 @@ public class EasyGame extends Game {
         // 设置简单难度背景图片
         backgroundImage = ImageManager.BACKGROUND_IMAGE_EASY;
     }
+
+    @Override
+    public void run() {
+        action();
+    }
 }

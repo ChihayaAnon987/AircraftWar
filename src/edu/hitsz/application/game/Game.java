@@ -2,11 +2,14 @@ package edu.hitsz.application.game;
 
 import edu.hitsz.aircraft.*;
 import edu.hitsz.application.HeroController;
+import edu.hitsz.application.ImageManager;
+import edu.hitsz.application.Main;
 import edu.hitsz.application.music.MusicPlayer;
 import edu.hitsz.application.music.MusicThread;
 import edu.hitsz.basic.AbstractFlyingObject;
 import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.prop.BaseProp;
+import edu.hitsz.prop.BombObserver;
 import edu.hitsz.scores.LeaderboardManager;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 
@@ -22,11 +25,11 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 游戏主面板，游戏主要组件之一，用于绘制并控制游戏界面
+ * 基础游戏框架，包含游戏界面、游戏逻辑、音乐播放等核心功能
  *
  * @author hitsz
  */
-public class Game extends JPanel {
+public abstract class Game extends JPanel implements Runnable {
 
     private int backGroundTop = 0;
 
@@ -104,16 +107,13 @@ public class Game extends JPanel {
     private MusicThread bgmThread = null;
     private MusicThread bossBgmThread = null;
 
-
-
-
     public Game() {
         // 添加返回按钮
         returnButton = new JButton("返回主菜单");
         returnButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                edu.hitsz.application.Main.cardLayout.show(edu.hitsz.application.Main.cardPanel, "MENU");
+                Main.cardLayout.show(Main.cardPanel, "MENU");
             }
         });
         this.add(returnButton);
@@ -124,8 +124,8 @@ public class Game extends JPanel {
         // 重置英雄机状态
         heroAircraft.setHp(1000);
         heroAircraft.setLocation(
-                edu.hitsz.application.Main.WINDOW_WIDTH / 2,
-                edu.hitsz.application.Main.WINDOW_HEIGHT - edu.hitsz.application.ImageManager.HERO_IMAGE.getHeight());
+                Main.WINDOW_WIDTH / 2,
+                Main.WINDOW_HEIGHT - ImageManager.HERO_IMAGE.getHeight());
         // 重置射击模式
         heroAircraft.resetShootMode();
 
@@ -176,7 +176,7 @@ public class Game extends JPanel {
                 if (enemyAircrafts.size() < enemyMaxNumber) {
                     // 生成策略：优先检查Boss生成条件（分数阈值），否则按概率生成超级精英/精英/普通
                     // Boss触发分数阈值（可多次出现）
-                    int bossSpawnScoreThreshold = 500; // 可调整：达到该分数后Boss有机会出现
+                    int bossSpawnScoreThreshold = 300; // 可调整：达到该分数后Boss有机会出现
                     // 检查当前场上是否已有 Boss
                     boolean bossExists = false;
                     for (AbstractAircraft a : enemyAircrafts) {
@@ -186,13 +186,13 @@ public class Game extends JPanel {
                         }
                     }
                     // 只有在没有 Boss、且冷却时间到、且分数达到阈值时才有概率生成 Boss
-                    if (!bossExists && (time - lastBossSpawnTime >= bossCooldown) && this.score >= bossSpawnScoreThreshold && Math.random() < 0.1) {
+                    if (!bossExists && (time - lastBossSpawnTime >= bossCooldown) && this.score >= bossSpawnScoreThreshold && Math.random() < 0.15) {
                         BossEnemy boss = (BossEnemy) bossEnemyFactory.createAircraft(
-                            (int) (Math.random() * (edu.hitsz.application.Main.WINDOW_WIDTH - edu.hitsz.application.ImageManager.BOSS_IMAGE.getWidth())),
-                            (int) (Math.random() * edu.hitsz.application.Main.WINDOW_HEIGHT * 0.05 + 50),
+                            (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.BOSS_IMAGE.getWidth())),
+                            (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05 + 50),
                             2,
                             0,
-                            1000
+                            500
                         );
                         enemyAircrafts.add(boss);
 
@@ -213,8 +213,8 @@ public class Game extends JPanel {
                         int superSpeedX = (int) (Math.random() * 10) - 5;
                         if (superSpeedX == 0) superSpeedX = 1;
                         enemyAircrafts.add(superEliteEnemyFactory.createAircraft(
-                                (int) (Math.random() * (edu.hitsz.application.Main.WINDOW_WIDTH - edu.hitsz.application.ImageManager.ELITE_PLUS_IMAGE.getWidth())),
-                                (int) (Math.random() * edu.hitsz.application.Main.WINDOW_HEIGHT * 0.05),
+                                (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_PLUS_IMAGE.getWidth())),
+                                (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
                                 superSpeedX,
                                 6,
                                 80
@@ -227,8 +227,8 @@ public class Game extends JPanel {
                             eliteSpeedX = 1;
                         }
                         enemyAircrafts.add(eliteEnemyFactory.createAircraft(
-                                (int) (Math.random() * (edu.hitsz.application.Main.WINDOW_WIDTH - edu.hitsz.application.ImageManager.ELITE_ENEMY_IMAGE.getWidth())),
-                                (int) (Math.random() * edu.hitsz.application.Main.WINDOW_HEIGHT * 0.05),
+                                (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_ENEMY_IMAGE.getWidth())),
+                                (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
                                 eliteSpeedX,
                                 5,
                                 50
@@ -236,8 +236,8 @@ public class Game extends JPanel {
                     } else {
                         // 其余概率生成普通敌机
                         enemyAircrafts.add(mobEnemyFactory.createAircraft(
-                                (int) (Math.random() * (edu.hitsz.application.Main.WINDOW_WIDTH - edu.hitsz.application.ImageManager.MOB_ENEMY_IMAGE.getWidth())),
-                                (int) (Math.random() * edu.hitsz.application.Main.WINDOW_HEIGHT * 0.05),
+                                (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.MOB_ENEMY_IMAGE.getWidth())),
+                                (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
                                 0,
                                 10,
                                 30
@@ -287,7 +287,7 @@ public class Game extends JPanel {
                 musicPlayer.playMusic("src/videos/game_over.wav");
 
                 // 跳转到排行榜界面并刷新
-                edu.hitsz.application.Main.cardLayout.show(edu.hitsz.application.Main.cardPanel, targetRankPage);
+                Main.cardLayout.show(Main.cardPanel, targetRankPage);
 
                 // 获取玩家姓名并记录分数
                 String playerName = JOptionPane.showInputDialog(
@@ -308,13 +308,13 @@ public class Game extends JPanel {
                 // 刷新对应的排行榜以显示最新记录
                 switch (targetRankPage) {
                     case "EASY_RANK":
-                        edu.hitsz.application.Main.easyRank.refreshRankList();
+                        Main.easyRank.refreshRankList();
                         break;
                     case "MEDIUM_RANK":
-                        edu.hitsz.application.Main.mediumRank.refreshRankList();
+                        Main.mediumRank.refreshRankList();
                         break;
                     case "HARD_RANK":
-                        edu.hitsz.application.Main.hardRank.refreshRankList();
+                        Main.hardRank.refreshRankList();
                         break;
                 }
             }
@@ -502,8 +502,41 @@ public class Game extends JPanel {
         heroBullets.removeIf(AbstractFlyingObject::notValid);
         enemyAircrafts.removeIf(AbstractFlyingObject::notValid);
         props.removeIf(AbstractFlyingObject::notValid); // 移除无效道具
+        
+        // 处理被炸弹销毁的敌机
+        handleBombDestroyedAircrafts();
     }
-
+    
+    /**
+     * 处理被炸弹销毁的敌机：加分和掉落道具
+     */
+    private void handleBombDestroyedAircrafts() {
+        List<AbstractAircraft> destroyedAircrafts = BombObserver.getDestroyedAircrafts();
+        if (!destroyedAircrafts.isEmpty()) {
+            for (AbstractAircraft aircraft : destroyedAircrafts) {
+                if (aircraft instanceof SuperEliteEnemy) {
+                    // 超级精英获得中等分
+                    score += 30;
+                    BaseProp prop = ((SuperEliteEnemy) aircraft).dropProp();
+                    if (prop != null) {
+                        props.add(prop);
+                    }
+                } else if (aircraft instanceof EliteEnemy) {
+                    // 精英敌机得分
+                    score += 20;
+                    BaseProp prop = ((EliteEnemy) aircraft).dropProp();
+                    if (prop != null) {
+                        props.add(prop);
+                    }
+                } else if (aircraft instanceof MobEnemy) {
+                    // 普通敌机得分
+                    score += 10;
+                }
+            }
+            // 清空已处理的列表
+            BombObserver.clearDestroyedAircrafts();
+        }
+    }
 
     //***********************
     //      Paint 各部分
@@ -519,10 +552,10 @@ public class Game extends JPanel {
         super.paint(g);
 
         // 绘制背景,图片滚动
-        g.drawImage(backgroundImage, 0, this.backGroundTop - edu.hitsz.application.Main.WINDOW_HEIGHT, null);
+        g.drawImage(backgroundImage, 0, this.backGroundTop - Main.WINDOW_HEIGHT, null);
         g.drawImage(backgroundImage, 0, this.backGroundTop, null);
         this.backGroundTop += 1;
-        if (this.backGroundTop == edu.hitsz.application.Main.WINDOW_HEIGHT) {
+        if (this.backGroundTop == Main.WINDOW_HEIGHT) {
             this.backGroundTop = 0;
         }
 
@@ -534,8 +567,8 @@ public class Game extends JPanel {
 
         paintImageWithPositionRevised(g, enemyAircrafts);
 
-        g.drawImage(edu.hitsz.application.ImageManager.HERO_IMAGE, heroAircraft.getLocationX() - edu.hitsz.application.ImageManager.HERO_IMAGE.getWidth() / 2,
-                heroAircraft.getLocationY() - edu.hitsz.application.ImageManager.HERO_IMAGE.getHeight() / 2, null);
+        g.drawImage(ImageManager.HERO_IMAGE, heroAircraft.getLocationX() - ImageManager.HERO_IMAGE.getWidth() / 2,
+                heroAircraft.getLocationY() - ImageManager.HERO_IMAGE.getHeight() / 2, null);
 
         //绘制得分和生命值
         paintScoreAndLife(g);

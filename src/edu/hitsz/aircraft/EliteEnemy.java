@@ -38,9 +38,9 @@ public class EliteEnemy extends AbstractAircraft {
     private static final PropFactory bombSupplyFactory = new BombSupplyFactory();
     
     // 道具掉落概率配置 (总和应该为100)
-    private static final int HP_SUPPLY_PROBABILITY = 50;
+    private static final int HP_SUPPLY_PROBABILITY = 10;
     private static final int FIRE_SUPPLY_PROBABILITY = 20;
-    private static final int BOMB_SUPPLY_PROBABILITY = 30;
+    private static final int BOMB_SUPPLY_PROBABILITY = 70;
 
     public EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp) {
         super(locationX, locationY, speedX, speedY, hp);

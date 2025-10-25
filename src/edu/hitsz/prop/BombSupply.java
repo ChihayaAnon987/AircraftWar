@@ -13,15 +13,28 @@ public class BombSupply extends BaseProp {
     }
 
     @Override
-    public void effect(HeroAircraft heroAircraft, List<AbstractAircraft> eliteEnemies, List<BaseBullet> enemyBullets) {
+    public void effect(HeroAircraft heroAircraft, List<AbstractAircraft> enemyAircrafts, List<BaseBullet> enemyBullets) {
         System.out.println("BombSupply active!");
         
         // 播放炸弹爆炸音效
         MusicPlayer.getMusicPlayer().playMusic("src/videos/bomb_explosion.wav");
         
-        // 清除场上所有敌机子弹
-        for (BaseBullet bullet : enemyBullets) {
-            bullet.vanish(); // 使子弹消失
+        // 使用观察者模式处理炸弹效果
+        BombSubject bombSubject = new BombSubject();
+        
+        // 为每个敌机创建观察者并添加到主题中
+        for (AbstractAircraft enemy : enemyAircrafts) {
+            BombObserver observer = new BombObserver(enemy);
+            bombSubject.addObserver(observer);
         }
+        
+        // 为每个敌机子弹创建观察者并添加到主题中
+        for (BaseBullet bullet : enemyBullets) {
+            BombObserver observer = new BombObserver(bullet);
+            bombSubject.addObserver(observer);
+        }
+        
+        // 激活炸弹效果
+        bombSubject.bombEffect();
     }
 }

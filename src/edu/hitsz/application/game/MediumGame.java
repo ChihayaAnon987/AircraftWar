@@ -11,4 +11,9 @@ public class MediumGame extends Game {
         // 设置中等难度背景图片
         backgroundImage = ImageManager.BACKGROUND_IMAGE_MEDIUM;
     }
+
+    @Override
+    public void run() {
+        action();
+    }
 }

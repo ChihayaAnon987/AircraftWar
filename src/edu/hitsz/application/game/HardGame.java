@@ -11,4 +11,9 @@ public class HardGame extends Game {
         // 设置困难难度背景图片
         backgroundImage = ImageManager.BACKGROUND_IMAGE_HARD;
     }
+
+    @Override
+    public void run() {
+        action();
+    }
 }
