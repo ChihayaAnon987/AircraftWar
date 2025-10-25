@@ -8,7 +8,7 @@ public class MediumGame extends Game {
     private int initialCycleDuration = 600;     // 初始敌机产生周期
     private int minCycleDuration = 300;         // 最小敌机产生周期
     private double initialEliteProb = 0.3;      // 初始精英敌机概率
-    private double maxEliteProb = 0.6;          // 最大精英敌机概率
+    private double maxEliteProb = 0.5;          // 最大精英敌机概率
     
     public MediumGame() {
         targetRankPage = "MEDIUM_RANK";
@@ -71,6 +71,7 @@ public class MediumGame extends Game {
     // 重写Boss生成逻辑，使Boss血量固定
     @Override
     protected BossEnemy createBossEnemy() {
+        System.out.printf("Boss敌机血量：%d。%n", bossHp);
         return (BossEnemy) bossEnemyFactory.createAircraft(
                 (int) (Math.random() * (edu.hitsz.application.Main.WINDOW_WIDTH - ImageManager.BOSS_IMAGE.getWidth())),
                 (int) (Math.random() * edu.hitsz.application.Main.WINDOW_HEIGHT * 0.05 + 50),

@@ -9,9 +9,9 @@ public class HardGame extends Game {
     private int bossHpIncrement = 100;          // 每次Boss血量增加
     private int maxBossHp = 1500;               // Boss血量上限
     private int initialCycleDuration = 600;     // 初始敌机产生周期
-    private int minCycleDuration = 200;         // 最小敌机产生周期
+    private int minCycleDuration = 350;         // 最小敌机产生周期
     private double initialEliteProb = 0.4;      // 初始精英敌机概率
-    private double maxEliteProb = 0.8;          // 最大精英敌机概率
+    private double maxEliteProb = 0.6;          // 最大精英敌机概率
     private int bossSpawnCount = 0;             // Boss生成次数
     
     public HardGame() {
@@ -25,7 +25,7 @@ public class HardGame extends Game {
     @Override
     public void configureDifficulty() {
         // 困难模式配置
-        enemyMaxNumber = 10;                    // 敌机最大数量
+        enemyMaxNumber = 8;                    // 敌机最大数量
         cycleDuration = 600;                    // 初始敌机产生周期
         bossScoreThreshold = 300;               // Boss敌机产生的分数阈值
         isBossEnabled = true;                   // 启用Boss敌机

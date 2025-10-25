@@ -244,7 +244,6 @@ public abstract class Game extends JPanel implements Runnable {
                     
                         // 打印Boss生成信息
                         System.out.println("产生BOSS敌机");
-                        // System.out.printf("Boss敌机血量倍率：%.2f。%n", enemyAttributeMultiplier);
 
                         // 停止普通背景音乐
                         if (bgmThread != null) {
