@@ -62,7 +62,7 @@ public class MediumGame extends Game {
                     eliteEnemyProbability, cycleDuration / 100.0, enemyAttributeMultiplier);
         } else
         {
-            System.out.printf("难度已提升到最大！敌机属性提升倍率为1.5");
+            System.out.printf("难度已提升到最大！敌机属性提升倍率为1.5%n");
         }
         
 

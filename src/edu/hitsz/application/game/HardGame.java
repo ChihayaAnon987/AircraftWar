@@ -66,7 +66,7 @@ public class HardGame extends Game {
                     eliteEnemyProbability, cycleDuration / 100.0, enemyAttributeMultiplier);
         } else
         {
-            System.out.printf("难度已提升到最大！敌机属性提升倍率为2.0");
+            System.out.printf("难度已提升到最大！敌机属性提升倍率为2.0%n");
         }
         
 
