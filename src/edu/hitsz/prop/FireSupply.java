@@ -15,7 +15,6 @@ public class FireSupply extends BaseProp {
 
     @Override
     public void effect(HeroAircraft heroAircraft, List<AbstractAircraft> eliteEnemies, List<BaseBullet> enemyBullets) {
-        System.out.println("FireSupply active!");
         heroAircraft.switchToScatterShoot();
         
         // 创建效果线程

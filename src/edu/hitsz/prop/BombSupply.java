@@ -14,8 +14,6 @@ public class BombSupply extends BaseProp {
 
     @Override
     public void effect(HeroAircraft heroAircraft, List<AbstractAircraft> enemyAircrafts, List<BaseBullet> enemyBullets) {
-        System.out.println("BombSupply active!");
-        
         // 播放炸弹爆炸音效
         MusicPlayer.getMusicPlayer().playMusic("src/videos/bomb_explosion.wav");
         

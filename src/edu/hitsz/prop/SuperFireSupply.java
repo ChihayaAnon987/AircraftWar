@@ -15,7 +15,6 @@ public class SuperFireSupply extends BaseProp {
 
     @Override
     public void effect(HeroAircraft heroAircraft, List<AbstractAircraft> eliteEnemies, List<BaseBullet> enemyBullets) {
-        System.out.println("SuperFireSupply active!");
         heroAircraft.switchToRingShoot();
         
         // 创建效果线程

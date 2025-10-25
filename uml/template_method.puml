@@ -1,0 +1,53 @@
+@startuml
+' Template Method Pattern UML Class Diagram for Aircraft War Game Difficulty System
+
+abstract class Game {
+    #int enemyMaxNumber
+    #int cycleDuration 
+    #int bossScoreThreshold
+    #int bossHp
+    #double eliteEnemyProbability
+    #boolean isBossEnabled
+    #boolean isDifficultyIncreaseWithTime
+    
+    +{abstract} configureDifficulty(): void
+    +{abstract} adjustDifficultyWithTime(int time): void
+    +action(): void
+    +Game()
+}
+
+class EasyGame {
+    +configureDifficulty(): void
+    +adjustDifficultyWithTime(int time): void
+}
+
+class MediumGame {
+    +configureDifficulty(): void
+    +adjustDifficultyWithTime(int time): void
+}
+
+class HardGame {
+    +configureDifficulty(): void
+    +adjustDifficultyWithTime(int time): void
+}
+
+Game <|-- EasyGame
+Game <|-- MediumGame
+Game <|-- HardGame
+
+note right of Game::configureDifficulty
+  模板方法的一部分，由子类实现
+  用于配置不同难度的基本参数
+end note
+
+note right of Game::adjustDifficultyWithTime
+  模板方法的一部分，由子类实现
+  用于随着时间推移调整游戏难度
+end note
+
+note right of Game::action
+  模板方法，定义了游戏的主要流程
+  在其中调用抽象方法来实现差异化配置
+end note
+
+@enduml

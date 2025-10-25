@@ -52,7 +52,7 @@ public abstract class Game extends JPanel implements Runnable {
     /**
      * 屏幕中出现的敌机最大数量
      */
-    private int enemyMaxNumber = 5;
+    protected int enemyMaxNumber = 5;
 
     /**
      * 当前得分
@@ -62,12 +62,22 @@ public abstract class Game extends JPanel implements Runnable {
      * 当前时刻
      */
     private int time = 0;
+    
+    /**
+     * 上次难度提升时间
+     */
+    private int lastDifficultyIncreaseTime = 0;
+    
+    /**
+     * 难度提升间隔（毫秒）
+     */
+    private final int difficultyIncreaseInterval = 5000; // 每5秒提升一次难度
 
     /**
      * 周期（ms)
      * 指示子弹的发射、敌机的产生频率
      */
-    private int cycleDuration = 600;
+    protected int cycleDuration = 600;
     private int cycleTime = 0;
 
     /**
@@ -84,7 +94,7 @@ public abstract class Game extends JPanel implements Runnable {
     private final AircraftFactory mobEnemyFactory = new MobEnemyFactory();
     private final AircraftFactory eliteEnemyFactory = new EliteEnemyFactory();
     private final AircraftFactory superEliteEnemyFactory = new SuperEliteEnemyFactory();
-    private final AircraftFactory bossEnemyFactory = new BossEnemyFactory();
+    protected final AircraftFactory bossEnemyFactory = new BossEnemyFactory();
     
     /**
      * 排行榜管理器
@@ -106,6 +116,17 @@ public abstract class Game extends JPanel implements Runnable {
     private MusicPlayer musicPlayer = MusicPlayer.getMusicPlayer();
     private MusicThread bgmThread = null;
     private MusicThread bossBgmThread = null;
+    
+    // 游戏难度相关配置参数
+    protected int bossScoreThreshold = 300;  // Boss敌机产生的分数阈值
+    protected int bossHp = 500;              // Boss敌机的血量
+    protected double eliteEnemyProbability = 0.3;  // 精英敌机的产生概率
+    protected double superEliteEnemyProbability = 0.1;  // 超级精英敌机的产生概率
+    protected boolean isBossEnabled = true;  // 是否启用Boss敌机
+    protected boolean isDifficultyIncreaseWithTime = true;  // 难度是否随时间增加
+    
+    // 敌机属性倍率
+    protected double enemyAttributeMultiplier = 1.0;
 
     public Game() {
         // 添加返回按钮
@@ -150,8 +171,35 @@ public abstract class Game extends JPanel implements Runnable {
 
         // 重置游戏状态
         gameOverFlag = false;
+        
+        // 配置游戏难度
+        configureDifficulty();
 
-
+    }
+    
+    /**
+     * 抽象方法：配置不同难度的基本参数
+     */
+    public abstract void configureDifficulty();
+    
+    /**
+     * 抽象方法：随着时间推移调整游戏难度
+     * @param time 当前游戏时间
+     */
+    public abstract void adjustDifficultyWithTime(int time);
+    
+    /**
+     * 创建Boss敌机的工厂方法，可被子类重写以实现不同的Boss属性
+     * @return Boss敌机实例
+     */
+    protected BossEnemy createBossEnemy() {
+        return (BossEnemy) bossEnemyFactory.createAircraft(
+                (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.BOSS_IMAGE.getWidth())),
+                (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05 + 50),
+                2,
+                0,
+                bossHp
+        );
     }
 
     /**
@@ -167,16 +215,20 @@ public abstract class Game extends JPanel implements Runnable {
 
             time += timeInterval;
 
+            // 调整难度
+            if (isDifficultyIncreaseWithTime && time - lastDifficultyIncreaseTime >= difficultyIncreaseInterval) {
+                lastDifficultyIncreaseTime = time;
+                adjustDifficultyWithTime(time);
+            }
 
             // 周期性执行（控制频率）
             if (timeCountAndNewCycleJudge()) {
-                System.out.println(time);
+                // System.out.println(time);
                 // 新敌机产生
 
                 if (enemyAircrafts.size() < enemyMaxNumber) {
                     // 生成策略：优先检查Boss生成条件（分数阈值），否则按概率生成超级精英/精英/普通
                     // Boss触发分数阈值（可多次出现）
-                    int bossSpawnScoreThreshold = 300; // 可调整：达到该分数后Boss有机会出现
                     // 检查当前场上是否已有 Boss
                     boolean bossExists = false;
                     for (AbstractAircraft a : enemyAircrafts) {
@@ -186,29 +238,26 @@ public abstract class Game extends JPanel implements Runnable {
                         }
                     }
                     // 只有在没有 Boss、且冷却时间到、且分数达到阈值时才有概率生成 Boss
-                    if (!bossExists && (time - lastBossSpawnTime >= bossCooldown) && this.score >= bossSpawnScoreThreshold && Math.random() < 0.15) {
-                        BossEnemy boss = (BossEnemy) bossEnemyFactory.createAircraft(
-                            (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.BOSS_IMAGE.getWidth())),
-                            (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05 + 50),
-                            2,
-                            0,
-                            500
-                        );
+                    if (isBossEnabled && !bossExists && (time - lastBossSpawnTime >= bossCooldown) && this.score >= bossScoreThreshold && Math.random() < 0.15) {
+                        BossEnemy boss = createBossEnemy();
                         enemyAircrafts.add(boss);
+                    
+                        // 打印Boss生成信息
+                        System.out.println("产生BOSS敌机");
+                        // System.out.printf("Boss敌机血量倍率：%.2f。%n", enemyAttributeMultiplier);
 
-                        
                         // 停止普通背景音乐
                         if (bgmThread != null) {
                             musicPlayer.stopMusic(bgmThread);
                             bgmThread = null;
                         }
-                        
+                    
                         // 播放Boss背景音乐
                         if (bossBgmThread != null) {
                             musicPlayer.stopMusic(bossBgmThread);
                         }
                         bossBgmThread = musicPlayer.playMusic("src/videos/bgm_boss.wav");
-                    } else if (Math.random() < 0.1) {
+                    } else if (Math.random() < superEliteEnemyProbability) {
                         // 生成超级精英
                         int superSpeedX = (int) (Math.random() * 10) - 5;
                         if (superSpeedX == 0) superSpeedX = 1;
@@ -216,10 +265,10 @@ public abstract class Game extends JPanel implements Runnable {
                                 (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_PLUS_IMAGE.getWidth())),
                                 (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
                                 superSpeedX,
-                                6,
-                                80
+                                (int)(6 * enemyAttributeMultiplier),
+                                (int)(80 * enemyAttributeMultiplier)
                         ));
-                    } else if (Math.random() < 0.3) {
+                    } else if (Math.random() < eliteEnemyProbability) {
                         // 生成精英敌机
                         int eliteSpeedX = (int) (Math.random() * 10) - 5;
                         // 确保精英敌机的speedX不为0
@@ -230,8 +279,8 @@ public abstract class Game extends JPanel implements Runnable {
                                 (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_ENEMY_IMAGE.getWidth())),
                                 (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
                                 eliteSpeedX,
-                                5,
-                                50
+                                (int)(5 * enemyAttributeMultiplier),
+                                (int)(50 * enemyAttributeMultiplier)
                         ));
                     } else {
                         // 其余概率生成普通敌机
@@ -239,8 +288,8 @@ public abstract class Game extends JPanel implements Runnable {
                                 (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.MOB_ENEMY_IMAGE.getWidth())),
                                 (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
                                 0,
-                                10,
-                                30
+                                (int)(10 * enemyAttributeMultiplier),
+                                (int)(30 * enemyAttributeMultiplier)
                         ));
                     }
                 }
@@ -479,6 +528,7 @@ public abstract class Game extends JPanel implements Runnable {
             }
             if (heroAircraft.crash(prop)) {
                 // 道具与英雄机碰撞
+                System.out.println(prop.getClass().getSimpleName() + " active!");
                 prop.effect(heroAircraft, enemyAircrafts, enemyBullets);
                 prop.vanish();
                 
@@ -503,7 +553,7 @@ public abstract class Game extends JPanel implements Runnable {
         enemyAircrafts.removeIf(AbstractFlyingObject::notValid);
         props.removeIf(AbstractFlyingObject::notValid); // 移除无效道具
         
-        // 处理被炸弹销毁的敌机
+        // 处理被炸弹销毁的敌机：加分和掉落道具
         handleBombDestroyedAircrafts();
     }
     
