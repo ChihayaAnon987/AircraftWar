@@ -78,20 +78,6 @@ public abstract class Game extends JPanel implements Runnable {
     }
 
     /**
-     * 火力道具效果跟踪
-     */
-    // private long fireSupplyStartTime = 0;
-    // private long fireSupplyDuration = 0;
-    // private boolean fireSupplyActive = false;
-
-    /**
-     * 超级火力道具效果跟踪
-     */
-    // private long superFireSupplyStartTime = 0;
-    // private long superFireSupplyDuration = 0;
-    // private boolean superFireSupplyActive = false;
-
-    /**
      * 屏幕中出现的敌机最大数量
      */
     protected int enemyMaxNumber = 5;
@@ -610,13 +596,6 @@ public abstract class Game extends JPanel implements Runnable {
     }
 
     /**
-     * 重置道具效果状态
-     */
-    private void resetPropEffectStatus() {
-        activePropType = PropType.NONE;
-    }
-    
-    /**
      * 后处理：
      * 1. 删除无效的子弹
      * 2. 删除无效的敌机
@@ -697,6 +676,9 @@ public abstract class Game extends JPanel implements Runnable {
         g.drawImage(ImageManager.HERO_IMAGE, heroAircraft.getLocationX() - ImageManager.HERO_IMAGE.getWidth() / 2,
                 heroAircraft.getLocationY() - ImageManager.HERO_IMAGE.getHeight() / 2, null);
 
+        //绘制Boss血量条
+        paintBossHealthBar(g);
+
         //绘制道具效果进度条
         paintPropEffectProgressBars(g);
 
@@ -723,16 +705,10 @@ public abstract class Game extends JPanel implements Runnable {
         HeroAircraft.ShootMode currentMode = heroAircraft.getCurrentShootMode();
         if (currentMode == HeroAircraft.ShootMode.STRAIGHT) {
             activePropType = PropType.NONE;
-        } else if (currentMode == HeroAircraft.ShootMode.SCATTER) {
-            // 如果是散射模式，确保激活的是火力道具
-            if (activePropType != PropType.FIRE) {
-                activePropType = PropType.NONE;
-            }
-        } else if (currentMode == HeroAircraft.ShootMode.RING) {
-            // 如果是环射模式，确保激活的是超级火力道具
-            if (activePropType != PropType.SUPER_FIRE) {
-                activePropType = PropType.NONE;
-            }
+        } else if (currentMode == HeroAircraft.ShootMode.SCATTER && activePropType != PropType.FIRE) {
+            activePropType = PropType.NONE;
+        } else if (currentMode == HeroAircraft.ShootMode.RING && activePropType != PropType.SUPER_FIRE) {
+            activePropType = PropType.NONE;
         }
         
         // 检查当前激活的道具类型并绘制相应进度条
@@ -750,15 +726,6 @@ public abstract class Game extends JPanel implements Runnable {
                 
                 drawVerticalProgressBar(g, heroAircraft.getLocationX() + ImageManager.HERO_IMAGE.getWidth() / 2 + 10,
                         heroAircraft.getLocationY() - 30, 20, 60, ratio, color);
-            }
-        } else {
-            // 如果有射击模式但没有激活的道具，尝试重新同步状态
-            if (currentMode == HeroAircraft.ShootMode.SCATTER) {
-                activePropType = PropType.FIRE;
-                // 注意：这里我们无法准确知道开始时间，所以进度条可能不准确
-            } else if (currentMode == HeroAircraft.ShootMode.RING) {
-                activePropType = PropType.SUPER_FIRE;
-                // 注意：这里我们无法准确知道开始时间，所以进度条可能不准确
             }
         }
     }
@@ -801,5 +768,42 @@ public abstract class Game extends JPanel implements Runnable {
         g.drawString("LIFE:" + this.heroAircraft.getHp(), x, y);
     }
 
-
+    /**
+     * 绘制Boss血量条在屏幕顶部
+     * @param g Graphics对象
+     */
+    private void paintBossHealthBar(Graphics g) {
+        // 查找当前场上的Boss敌机
+        for (AbstractAircraft aircraft : enemyAircrafts) {
+            if (aircraft instanceof BossEnemy && !aircraft.notValid()) {
+                BossEnemy boss = (BossEnemy) aircraft;
+                
+                // 血量条参数
+                int barWidth = 400;
+                int barHeight = 15;
+                int x = (Main.WINDOW_WIDTH - barWidth) / 2; // 居中显示
+                int y = 10; // 距离顶部10像素
+                
+                // 绘制血量条背景
+                g.setColor(Color.BLACK);
+                g.fillRect(x, y, barWidth, barHeight);
+                
+                // 绘制当前血量
+                int currentHpWidth = (int) ((boss.getHp() / (double) boss.getMaxHp()) * barWidth);
+                g.setColor(Color.RED);
+                g.fillRect(x, y, currentHpWidth, barHeight);
+                
+                // 绘制Boss标识
+                g.setColor(Color.WHITE);
+                g.setFont(new Font("SansSerif", Font.BOLD, 16));
+                String bossLabel = "BOSS";
+                FontMetrics fm = g.getFontMetrics();
+                int labelWidth = fm.stringWidth(bossLabel);
+                g.drawString(bossLabel, x + (barWidth - labelWidth) / 2, y + barHeight / 2 + fm.getAscent() / 2 - 2);
+                
+                // 找到第一个Boss后就停止绘制
+                break;
+            }
+        }
+    }
 }

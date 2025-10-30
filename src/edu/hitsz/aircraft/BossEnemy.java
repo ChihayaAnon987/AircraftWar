@@ -94,7 +94,9 @@ public class BossEnemy extends AbstractAircraft {
         return power;
     }
 
-
+    public int getMaxHp() {
+        return maxHp;
+    }
     /**
      * Boss 敌机坠毁后随机掉落 0..3 个道具
      * @return 道具列表（可能为空列表）

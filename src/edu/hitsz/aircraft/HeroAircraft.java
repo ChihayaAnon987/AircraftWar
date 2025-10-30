@@ -174,22 +174,6 @@ public class HeroAircraft extends AbstractAircraft {
     }
     
     /**
-     * 切换到直射模式（仅当当前不是散射或环射模式时）
-     */
-    public void switchToStraightShoot() {
-        // 中断之前的道具效果线程
-        if (activeEffectThread != null && activeEffectThread.isAlive()) {
-            activeEffectThread.interrupt();
-        }
-        
-        if (currentShootMode != ShootMode.SCATTER && currentShootMode != ShootMode.RING) {
-            this.shootStrategy = new StraightShootStrategy(true);
-            this.shootNum = 1;
-            this.currentShootMode = ShootMode.STRAIGHT;
-        }
-    }
-    
-    /**
      * 重置射击模式为直射
      */
     public void resetShootMode() {
