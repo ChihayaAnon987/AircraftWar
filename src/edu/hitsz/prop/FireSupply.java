@@ -15,6 +15,7 @@ public class FireSupply extends BaseProp {
 
     @Override
     public void effect(HeroAircraft heroAircraft, List<AbstractAircraft> eliteEnemies, List<BaseBullet> enemyBullets) {
+        // 应用散射效果前先切换到散射模式
         heroAircraft.switchToScatterShoot();
         
         // 创建效果线程

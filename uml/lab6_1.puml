@@ -66,7 +66,7 @@ AbstractAircraft <|-- EliteEnemy
 AbstractAircraft <|-- SuperEliteEnemy
 AbstractAircraft <|-- BossEnemy
 
-BombSubject o-- "0..*" Observer : observes >
+BombSubject o--  Observer : observes >
 AbstractAircraft <-- BombObserver : references >
 BaseBullet <-- BombObserver : references >
 Game ..> BombObserver

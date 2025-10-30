@@ -10,7 +10,11 @@ import edu.hitsz.basic.AbstractFlyingObject;
 import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.prop.BaseProp;
 import edu.hitsz.prop.BombObserver;
+import edu.hitsz.prop.FireSupply;
+import edu.hitsz.prop.SuperFireSupply;
 import edu.hitsz.scores.LeaderboardManager;
+import edu.hitsz.strategy.RingShootStrategy;
+import edu.hitsz.strategy.ScatterShootStrategy;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 
 import javax.swing.*;
@@ -48,6 +52,44 @@ public abstract class Game extends JPanel implements Runnable {
     private final List<BaseBullet> heroBullets;
     private final List<BaseBullet> enemyBullets;
     private final List<BaseProp> props; // 道具列表
+
+    /**
+     * 当前激活的道具类型
+     */
+    private PropType activePropType = PropType.NONE;
+    
+    /**
+     * 道具效果开始时间
+     */
+    private long propEffectStartTime = 0;
+    
+    /**
+     * 道具效果持续时间
+     */
+    private long propEffectDuration = 0;
+
+    /**
+     * 道具类型枚举
+     */
+    private enum PropType {
+        NONE,      // 无道具效果
+        FIRE,      // 火力道具效果
+        SUPER_FIRE // 超级火力道具效果
+    }
+
+    /**
+     * 火力道具效果跟踪
+     */
+    // private long fireSupplyStartTime = 0;
+    // private long fireSupplyDuration = 0;
+    // private boolean fireSupplyActive = false;
+
+    /**
+     * 超级火力道具效果跟踪
+     */
+    // private long superFireSupplyStartTime = 0;
+    // private long superFireSupplyDuration = 0;
+    // private boolean superFireSupplyActive = false;
 
     /**
      * 屏幕中出现的敌机最大数量
@@ -149,6 +191,15 @@ public abstract class Game extends JPanel implements Runnable {
                 Main.WINDOW_HEIGHT - ImageManager.HERO_IMAGE.getHeight());
         // 重置射击模式
         heroAircraft.resetShootMode();
+        
+        // 设置道具效果结束回调
+        heroAircraft.setPropEffectEndCallback(new Runnable() {
+            @Override
+            public void run() {
+                // 道具效果结束时重置状态
+                activePropType = PropType.NONE;
+            }
+        });
 
         enemyAircrafts = new LinkedList<>();
         heroBullets = new LinkedList<>();
@@ -528,7 +579,27 @@ public abstract class Game extends JPanel implements Runnable {
             if (heroAircraft.crash(prop)) {
                 // 道具与英雄机碰撞
                 System.out.println(prop.getClass().getSimpleName() + " active!");
-                prop.effect(heroAircraft, enemyAircrafts, enemyBullets);
+                
+                // 根据道具类型设置相应的状态和时间参数
+                if (prop instanceof FireSupply) {
+                    // 只有当当前不是环射模式时才应用火力道具
+                    if (heroAircraft.getCurrentShootMode() != HeroAircraft.ShootMode.RING) {
+                        activePropType = PropType.FIRE;
+                        propEffectStartTime = System.currentTimeMillis();
+                        propEffectDuration = ScatterShootStrategy.SCATTER_SHOOT_DURATION;
+                        prop.effect(heroAircraft, enemyAircrafts, enemyBullets);
+                    }
+                } else if (prop instanceof SuperFireSupply) {
+                    // 超级火力道具可以覆盖任何现有道具
+                    activePropType = PropType.SUPER_FIRE;
+                    propEffectStartTime = System.currentTimeMillis();
+                    propEffectDuration = RingShootStrategy.RING_SHOOT_DURATION;
+                    prop.effect(heroAircraft, enemyAircrafts, enemyBullets);
+                } else {
+                    // 其他道具（如HpSupply, BombSupply等）
+                    prop.effect(heroAircraft, enemyAircrafts, enemyBullets);
+                }
+                
                 prop.vanish();
                 
                 // 播放道具生效音效
@@ -538,6 +609,13 @@ public abstract class Game extends JPanel implements Runnable {
 
     }
 
+    /**
+     * 重置道具效果状态
+     */
+    private void resetPropEffectStatus() {
+        activePropType = PropType.NONE;
+    }
+    
     /**
      * 后处理：
      * 1. 删除无效的子弹
@@ -619,6 +697,9 @@ public abstract class Game extends JPanel implements Runnable {
         g.drawImage(ImageManager.HERO_IMAGE, heroAircraft.getLocationX() - ImageManager.HERO_IMAGE.getWidth() / 2,
                 heroAircraft.getLocationY() - ImageManager.HERO_IMAGE.getHeight() / 2, null);
 
+        //绘制道具效果进度条
+        paintPropEffectProgressBars(g);
+
         //绘制得分和生命值
         paintScoreAndLife(g);
 
@@ -635,6 +716,79 @@ public abstract class Game extends JPanel implements Runnable {
             g.drawImage(image, object.getLocationX() - image.getWidth() / 2,
                     object.getLocationY() - image.getHeight() / 2, null);
         }
+    }
+
+    private void paintPropEffectProgressBars(Graphics g) {
+        // 根据英雄机当前射击模式校准道具类型
+        HeroAircraft.ShootMode currentMode = heroAircraft.getCurrentShootMode();
+        if (currentMode == HeroAircraft.ShootMode.STRAIGHT) {
+            activePropType = PropType.NONE;
+        } else if (currentMode == HeroAircraft.ShootMode.SCATTER) {
+            // 如果是散射模式，确保激活的是火力道具
+            if (activePropType != PropType.FIRE) {
+                activePropType = PropType.NONE;
+            }
+        } else if (currentMode == HeroAircraft.ShootMode.RING) {
+            // 如果是环射模式，确保激活的是超级火力道具
+            if (activePropType != PropType.SUPER_FIRE) {
+                activePropType = PropType.NONE;
+            }
+        }
+        
+        // 检查当前激活的道具类型并绘制相应进度条
+        if (activePropType != PropType.NONE) {
+            long elapsed = System.currentTimeMillis() - propEffectStartTime;
+            
+            // 检查道具是否已过期
+            if (elapsed >= propEffectDuration) {
+                // 道具已过期，重置状态
+                activePropType = PropType.NONE;
+            } else {
+                // 绘制进度条
+                float ratio = 1.0f - (float) elapsed / propEffectDuration;
+                Color color = (activePropType == PropType.FIRE) ? Color.YELLOW : Color.BLUE;
+                
+                drawVerticalProgressBar(g, heroAircraft.getLocationX() + ImageManager.HERO_IMAGE.getWidth() / 2 + 10,
+                        heroAircraft.getLocationY() - 30, 20, 60, ratio, color);
+            }
+        } else {
+            // 如果有射击模式但没有激活的道具，尝试重新同步状态
+            if (currentMode == HeroAircraft.ShootMode.SCATTER) {
+                activePropType = PropType.FIRE;
+                // 注意：这里我们无法准确知道开始时间，所以进度条可能不准确
+            } else if (currentMode == HeroAircraft.ShootMode.RING) {
+                activePropType = PropType.SUPER_FIRE;
+                // 注意：这里我们无法准确知道开始时间，所以进度条可能不准确
+            }
+        }
+    }
+
+    /**
+     * 绘制竖直进度条
+     * @param g Graphics对象
+     * @param x 进度条x坐标
+     * @param y 进度条y坐标
+     * @param width 进度条宽度
+     * @param height 进度条高度
+     * @param ratio 进度比例 (0.0 - 1.0)
+     * @param color 进度条颜色
+     */
+    private void drawVerticalProgressBar(Graphics g, int x, int y, int width, int height, float ratio, Color color) {
+        // 确保比例在有效范围内
+        ratio = Math.max(0.0f, Math.min(1.0f, ratio));
+        
+        // 绘制背景
+        g.setColor(Color.GRAY);
+        g.fillRect(x, y, width, height);
+        
+        // 绘制进度
+        int progressHeight = (int) (height * ratio);
+        g.setColor(color);
+        g.fillRect(x, y + height - progressHeight, width, progressHeight);
+        
+        // 绘制边框
+        g.setColor(Color.BLACK);
+        g.drawRect(x, y, width, height);
     }
 
     private void paintScoreAndLife(Graphics g) {

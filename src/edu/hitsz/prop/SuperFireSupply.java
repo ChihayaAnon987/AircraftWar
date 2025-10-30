@@ -15,6 +15,7 @@ public class SuperFireSupply extends BaseProp {
 
     @Override
     public void effect(HeroAircraft heroAircraft, List<AbstractAircraft> eliteEnemies, List<BaseBullet> enemyBullets) {
+        // 应用环射效果前先切换到环射模式
         heroAircraft.switchToRingShoot();
         
         // 创建效果线程

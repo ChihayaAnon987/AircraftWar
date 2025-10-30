@@ -44,6 +44,11 @@ public class HeroAircraft extends AbstractAircraft {
      * 当前激活的效果线程
      */
     private Thread activeEffectThread = null;
+    
+    /**
+     * 道具效果结束回调
+     */
+    private Runnable propEffectEndCallback = null;
 
     /**
      * 私有构造方法，防止外部实例化
@@ -67,7 +72,7 @@ public class HeroAircraft extends AbstractAircraft {
     /**
      * 射击模式枚举
      */
-    private enum ShootMode {
+    public enum ShootMode {
         STRAIGHT,    // 直射
         SCATTER,     // 散射
         RING         // 环射
@@ -142,6 +147,11 @@ public class HeroAircraft extends AbstractAircraft {
      * 切换到散射模式（仅当当前不是环射模式时）
      */
     public void switchToScatterShoot() {
+        // 中断之前的道具效果线程
+        if (activeEffectThread != null && activeEffectThread.isAlive()) {
+            activeEffectThread.interrupt();
+        }
+        
         if (currentShootMode != ShootMode.RING) {
             this.shootStrategy = new ScatterShootStrategy(true);
             this.shootNum = 3;
@@ -153,6 +163,11 @@ public class HeroAircraft extends AbstractAircraft {
      * 切换到环射模式
      */
     public void switchToRingShoot() {
+        // 中断之前的道具效果线程
+        if (activeEffectThread != null && activeEffectThread.isAlive()) {
+            activeEffectThread.interrupt();
+        }
+        
         this.shootStrategy = new RingShootStrategy(true);
         this.shootNum = 20;
         this.currentShootMode = ShootMode.RING;
@@ -162,6 +177,11 @@ public class HeroAircraft extends AbstractAircraft {
      * 切换到直射模式（仅当当前不是散射或环射模式时）
      */
     public void switchToStraightShoot() {
+        // 中断之前的道具效果线程
+        if (activeEffectThread != null && activeEffectThread.isAlive()) {
+            activeEffectThread.interrupt();
+        }
+        
         if (currentShootMode != ShootMode.SCATTER && currentShootMode != ShootMode.RING) {
             this.shootStrategy = new StraightShootStrategy(true);
             this.shootNum = 1;
@@ -173,9 +193,35 @@ public class HeroAircraft extends AbstractAircraft {
      * 重置射击模式为直射
      */
     public void resetShootMode() {
+        // 中断之前的道具效果线程
+        if (activeEffectThread != null && activeEffectThread.isAlive()) {
+            activeEffectThread.interrupt();
+        }
+        
         this.shootStrategy = new StraightShootStrategy(true);
         this.shootNum = 1;
         this.currentShootMode = ShootMode.STRAIGHT;
+        
+        // 道具效果结束时调用回调
+        if (propEffectEndCallback != null) {
+            propEffectEndCallback.run();
+        }
+    }
+    
+    /**
+     * 设置道具效果结束回调
+     * @param callback 回调函数
+     */
+    public void setPropEffectEndCallback(Runnable callback) {
+        this.propEffectEndCallback = callback;
+    }
+    
+    /**
+     * 获取当前射击模式
+     * @return 当前射击模式
+     */
+    public ShootMode getCurrentShootMode() {
+        return currentShootMode;
     }
     
     /**
