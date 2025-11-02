@@ -1,0 +1,108 @@
+@startuml
+' 设置类图标题
+title 观察者模式 - 炸弹道具
+
+' 定义接口
+interface Subject {
+    + addObserver(Observer observer)
+    + removeObserver(Observer observer)
+    + notifyObservers()
+}
+
+interface Observer {
+    + update()
+}
+
+' 定义具体主题类
+class BombSubject {
+    - observers: List<Observer>
+    + addObserver(observer: Observer)
+    + removeObserver(observer: Observer)
+    + notifyObservers()
+    + bombEffect()
+}
+
+' 定义具体观察者类
+class BombObserver {
+    - static destroyedAircrafts: List<AbstractAircraft>
+    # aircraft: AbstractAircraft
+    # bullet: BaseBullet
+    + BombObserver(aircraft: AbstractAircraft)
+    + BombObserver(bullet: BaseBullet)
+    + update()
+    + getAircraft(): AbstractAircraft
+    + getBullet(): BaseBullet
+    + {static} getDestroyedAircrafts(): List<AbstractAircraft>
+    + {static} clearDestroyedAircrafts()
+}
+
+' 定义其他相关类
+class BombSupply {
+    + BombSupply(int locationX, int locationY, int speedX, int speedY)
+    + effect(HeroAircraft heroAircraft, List<AbstractAircraft> enemyAircrafts, List<BaseBullet> enemyBullets)
+}
+
+class Game {
+    - enemyAircrafts: List<AbstractAircraft>
+    - enemyBullets: List<BaseBullet>
+    - handleBombDestroyedAircrafts()
+}
+
+abstract class AbstractAircraft {
+    # hp: int
+    # maxHp: int
+    + decreaseHp(decrease: int)
+    + getHp(): int
+    + notValid(): boolean
+    + vanish(): void
+}
+
+class MobEnemy
+class EliteEnemy
+class SuperEliteEnemy
+class BossEnemy
+
+class BaseBullet {
+    + vanish(): void
+}
+
+' 定义继承和实现关系
+Subject <|.. BombSubject
+Observer <|.. BombObserver
+
+AbstractAircraft <|-- MobEnemy
+AbstractAircraft <|-- EliteEnemy
+AbstractAircraft <|-- SuperEliteEnemy
+AbstractAircraft <|-- BossEnemy
+
+BombSubject o-- Observer : observes >
+AbstractAircraft <-- BombObserver : references >
+BaseBullet <-- BombObserver : references >
+BombSupply ..> BombSubject
+BombSupply ..> BombObserver
+Game ..> BombObserver
+
+note right of BombSubject::bombEffect()
+  当炸弹被激活时，会调用此方法
+  通知所有观察者（敌机和子弹）炸弹已生效
+end note
+
+note right of BombObserver::update()
+  实现不同类型的敌机和子弹
+  对炸弹的不同反应
+end note
+
+note right of BombSupply::effect()
+  炸弹道具效果实现：
+  1. 为每个敌机创建观察者
+  2. 为每个敌机子弹创建观察者
+  3. 将所有观察者添加到主题中
+  4. 激活炸弹效果
+end note
+
+note right of Game::handleBombDestroyedAircrafts()
+  处理被炸弹销毁的敌机
+  添加分数和掉落道具
+end note
+
+@enduml

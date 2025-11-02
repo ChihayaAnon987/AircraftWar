@@ -1,0 +1,215 @@
+@startuml
+
+' 定义抽象父类和接口
+abstract class AbstractFlyingObject {
+    # locationX: int
+    # locationY: int
+    # speedX: int
+    # speedY: int
+    # image: BufferedImage
+    # width: int
+    # height: int
+    # isValid: boolean
+    + forward(): void
+    + crash(AbstractFlyingObject flyingObject): boolean
+    + getLocationX(): int
+    + getLocationY(): int
+    + setLocation(double locationX, double locationY): void
+    + getSpeedY(): int
+    + getImage(): BufferedImage
+    + getWidth(): int
+    + getHeight(): int
+    + notValid(): boolean
+    + vanish(): void
+}
+
+abstract class AbstractAircraft {
+    # maxHp: int
+    # hp: int
+    # shootStrategy: ShootStrategy
+    + AbstractAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
+    + decreaseHp(int decrease): void
+    + increaseHp(int increase): void
+    + getHp(): int
+    + {abstract} shoot(): List<BaseBullet>
+    + {abstract} getDirection(): int
+    + {abstract} getShootNum(): int
+    + {abstract} getPower(): int
+    + setShootStrategy(ShootStrategy strategy): void
+}
+
+abstract class BaseBullet {
+    - power: int
+    + BaseBullet(int locationX, int locationY, int speedX, int speedY, int power)
+    + forward(): void
+    + getPower(): int
+}
+
+abstract class BaseProp {
+    # lock: Object
+    + BaseProp(int locationX, int locationY, int speedX, int speedY)
+    + {abstract} effect(HeroAircraft heroAircraft, List<AbstractAircraft> eliteEnemies, List<BaseBullet> enemyBullets): void
+}
+
+' 定义具体飞机类
+class HeroAircraft {
+    - instance: HeroAircraft
+    - shootNum: int
+    - power: int
+    - direction: int
+    - currentShootMode: ShootMode
+    - activeEffectThread: Thread
+    - propEffectEndCallback: Runnable
+    + getInstance(): HeroAircraft
+    + setLocation(int locationX, int locationY): void
+    + forward(): void
+    + shoot(): List<BaseBullet>
+    + getDirection(): int
+    + getShootNum(): int
+    + getPower(): int
+    + setShootNum(int num): void
+    + switchToScatterShoot(): void
+    + switchToRingShoot(): void
+    + resetShootMode(): void
+    + setPropEffectEndCallback(Runnable callback): void
+    + setHp(int hp): void
+}
+
+class MobEnemy {
+    + MobEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + forward(): void
+    + shoot(): List<BaseBullet>
+    + getDirection(): int
+    + getShootNum(): int
+    + getPower(): int
+}
+
+class EliteEnemy {
+    - shootNum: int
+    - power: int
+    - direction: int
+    - hpSupplyFactory: PropFactory
+    - fireSupplyFactory: PropFactory
+    - bombSupplyFactory: PropFactory
+    - HP_SUPPLY_PROBABILITY: int
+    - FIRE_SUPPLY_PROBABILITY: int
+    - BOMB_SUPPLY_PROBABILITY: int
+    + EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + forward(): void
+    + shoot(): List<BaseBullet>
+    + getDirection(): int
+    + getShootNum(): int
+    + getPower(): int
+    + dropProp(): BaseProp
+}
+
+class SuperEliteEnemy {
+    - shootNum: int
+    - power: int
+    - direction: int
+    - hpSupplyFactory: PropFactory
+    - fireSupplyFactory: PropFactory
+    - bombSupplyFactory: PropFactory
+    - superFireSupplyFactory: PropFactory
+    - HP_SUPPLY_PROBABILITY: int
+    - FIRE_SUPPLY_PROBABILITY: int
+    - BOMB_SUPPLY_PROBABILITY: int
+    - SUPER_FIRE_SUPPLY_PROBABILITY: int
+    + SuperEliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + forward(): void
+    + shoot(): List<BaseBullet>
+    + getDirection(): int
+    + getShootNum(): int
+    + getPower(): int
+    + dropProp(): BaseProp
+}
+
+class BossEnemy {
+    - shootNum: int
+    - power: int
+    - direction: int
+    - hpSupplyFactory: PropFactory
+    - fireSupplyFactory: PropFactory
+    - bombSupplyFactory: PropFactory
+    - superFireSupplyFactory: PropFactory
+    - HP_SUPPLY_PROBABILITY: int
+    - FIRE_SUPPLY_PROBABILITY: int
+    - BOMB_SUPPLY_PROBABILITY: int
+    - SUPER_FIRE_SUPPLY_PROBABILITY: int
+    + BossEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + forward(): void
+    + shoot(): List<BaseBullet>
+    + getDirection(): int
+    + getShootNum(): int
+    + getPower(): int
+    + dropProps(): List<BaseProp>
+    + getMaxHp(): int
+}
+
+' 定义具体子弹类
+class HeroBullet {
+    + HeroBullet(int locationX, int locationY, int speedX, int speedY, int power)
+}
+
+class EnemyBullet {
+    + EnemyBullet(int locationX, int locationY, int speedX, int speedY, int power)
+}
+
+' 定义具体道具类
+class HpSupply {
+    - hpIncrease: int
+    + HpSupply(int locationX, int locationY, int speedX, int speedY)
+    + effect(HeroAircraft heroAircraft, List<AbstractAircraft> eliteEnemies, List<BaseBullet> enemyBullets): void
+}
+
+class FireSupply {
+    + FireSupply(int locationX, int locationY, int speedX, int speedY)
+    + effect(HeroAircraft heroAircraft, List<AbstractAircraft> eliteEnemies, List<BaseBullet> enemyBullets): void
+}
+
+class BombSupply {
+    + BombSupply(int locationX, int locationY, int speedX, int speedY)
+    + effect(HeroAircraft heroAircraft, List<AbstractAircraft> enemyAircrafts, List<BaseBullet> enemyBullets): void
+}
+
+class SuperFireSupply {
+    + SuperFireSupply(int locationX, int locationY, int speedX, int speedY)
+    + effect(HeroAircraft heroAircraft, List<AbstractAircraft> eliteEnemies, List<BaseBullet> enemyBullets): void
+}
+
+' 定义继承关系
+AbstractFlyingObject <|-- AbstractAircraft
+AbstractFlyingObject <|-- BaseBullet
+AbstractFlyingObject <|-- BaseProp
+
+AbstractAircraft <|-- HeroAircraft
+AbstractAircraft <|-- MobEnemy
+AbstractAircraft <|-- EliteEnemy
+AbstractAircraft <|-- SuperEliteEnemy
+AbstractAircraft <|-- BossEnemy
+
+BaseBullet <|-- HeroBullet
+BaseBullet <|-- EnemyBullet
+
+BaseProp <|-- HpSupply
+BaseProp <|-- FireSupply
+BaseProp <|-- BombSupply
+BaseProp <|-- SuperFireSupply
+
+' 添加注释说明
+note top of AbstractAircraft : 所有飞机的抽象基类
+note top of BaseBullet : 所有子弹的抽象基类
+note top of BaseProp : 所有道具的抽象基类
+note top of HeroAircraft : 英雄机（单例模式）
+note top of MobEnemy : 普通敌机（不会射击）
+note top of EliteEnemy : 精英敌机（直线射击）
+note top of SuperEliteEnemy : 超级精英敌机（散射）
+note top of BossEnemy : Boss敌机（环射）
+note top of HeroBullet : 英雄机子弹
+note top of EnemyBullet : 敌机子弹
+note top of HpSupply : 加血道具
+note top of FireSupply : 火力道具（散射）
+note top of BombSupply : 炸弹道具
+note top of SuperFireSupply : 超级火力道具（环射）
+
+@enduml

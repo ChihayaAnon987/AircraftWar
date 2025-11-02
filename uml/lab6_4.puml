@@ -1,0 +1,60 @@
+@startuml
+' 设置类图标题
+title 单例模式 - 英雄机
+
+' 定义HeroAircraft类
+class HeroAircraft {
+    - {static} instance: HeroAircraft
+    - shootNum: int
+    - power: int
+    - direction: int
+    - currentShootMode: ShootMode
+    - activeEffectThread: Thread
+    - propEffectEndCallback: Runnable
+    - HeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
+    + {static} getInstance(): HeroAircraft
+    + setLocation(int locationX, int locationY): void
+    + forward(): void
+    + shoot(): List<BaseBullet>
+    + getDirection(): int
+    + getShootNum(): int
+    + getPower(): int
+    + setShootNum(int num): void
+    + switchToScatterShoot(): void
+    + switchToRingShoot(): void
+    + resetShootMode(): void
+    + setPropEffectEndCallback(Runnable callback): void
+    + setHp(int hp): void
+    + decreaseHp(int decrease): void
+    + increaseHp(int increase): void
+    + getHp(): int
+}
+
+' 定义Game类（使用HeroAircraft）
+class Game {
+    - heroAircraft: HeroAircraft
+    + Game()
+}
+
+' 定义Main类（使用HeroAircraft）
+class Main {
+    + main(String[] args)
+}
+
+
+
+note right of Game::heroAircraft
+  通过HeroAircraft.getInstance()
+  获取英雄机实例
+end note
+
+note right of Main
+  可以通过HeroAircraft.getInstance()
+  在任何地方访问同一个英雄机实例
+end note
+
+' 添加关系
+Game --> HeroAircraft : 使用
+Main --> HeroAircraft : 使用
+
+@enduml
