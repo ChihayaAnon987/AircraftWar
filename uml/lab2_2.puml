@@ -1,0 +1,59 @@
+@startuml
+'https://plantuml.com/factory
+
+abstract class AbstractAircraft {
+    # maxHp:int
+    # hp:int
+    + AbstractAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
+    + decreaseHp(int decrease):void
+    + increaseHp(int increase):void
+    + getHp():int
+    + {abstract} shoot():List<BaseBullet>
+    + {abstract} getDirection():int
+    + {abstract} getShootNum():int
+    + {abstract} getPower():int
+}
+
+class MobEnemy {
+    + MobEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + forward():void
+    + shoot():List<BaseBullet>
+    + getDirection():int
+    + getShootNum():int
+    + getPower():int
+}
+
+class EliteEnemy {
+    - shootNum:int
+    - power:int
+    - direction:int
+    + EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + forward():void
+    + shoot():List<BaseBullet>
+    + getDirection():int
+    + getShootNum():int
+    + getPower():int
+}
+
+AbstractAircraft <|-- MobEnemy
+AbstractAircraft <|-- EliteEnemy
+
+interface AircraftFactory {
+    + createAircraft(int locationX, int locationY, int speedX, int speedY, int hp):AbstractAircraft
+}
+
+class MobEnemyFactory {
+    + createAircraft(int locationX, int locationY, int speedX, int speedY, int hp):AbstractAircraft
+}
+
+class EliteEnemyFactory {
+    + createAircraft(int locationX, int locationY, int speedX, int speedY, int hp):AbstractAircraft
+}
+
+AircraftFactory <|-- MobEnemyFactory
+AircraftFactory <|-- EliteEnemyFactory
+MobEnemyFactory ..> MobEnemy
+EliteEnemyFactory ..> EliteEnemy
+
+
+@enduml

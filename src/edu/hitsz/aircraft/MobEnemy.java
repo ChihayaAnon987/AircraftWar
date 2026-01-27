@@ -2,8 +2,8 @@ package edu.hitsz.aircraft;
 
 import edu.hitsz.application.Main;
 import edu.hitsz.bullet.BaseBullet;
+import edu.hitsz.strategy.NoneShootStrategy;
 
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -16,6 +16,8 @@ public class MobEnemy extends AbstractAircraft {
 
     public MobEnemy(int locationX, int locationY, int speedX, int speedY, int hp) {
         super(locationX, locationY, speedX, speedY, hp);
+        // 普通敌机不发射子弹，使用空射击策略
+        this.shootStrategy = new NoneShootStrategy();
     }
 
     @Override
@@ -29,12 +31,20 @@ public class MobEnemy extends AbstractAircraft {
 
     @Override
     public List<BaseBullet> shoot() {
-        return new LinkedList<>();
+        // 普通敌机不能射击，使用策略模式
+        return shootStrategy.shoot(
+                this.getLocationX(),
+                this.getLocationY(),
+                this.speedX,
+                this.getSpeedY(),
+                this.getDirection(),
+                this.getShootNum(),
+                this.getPower());
     }
 
     @Override
     public int getDirection() {
-        return 0;
+        return 1; // 向下
     }
 
     @Override

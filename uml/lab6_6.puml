@@ -1,0 +1,98 @@
+@startuml
+' 设置类图标题
+title 模板方法模式 - 游戏难度
+
+' 定义抽象基类
+abstract class Game {
+    # enemyMaxNumber: int
+    # cycleDuration: int
+    # bossScoreThreshold: int
+    # bossHp: int
+    # eliteEnemyProbability: double
+    # superEliteEnemyProbability: double
+    # isBossEnabled: boolean
+    # isDifficultyIncreaseWithTime: boolean
+    # enemyAttributeMultiplier: double
+    # targetRankPage: String
+    # level: int
+    # backgroundImage: BufferedImage
+    + Game()
+    + {abstract} configureDifficulty()
+    + {abstract} adjustDifficultyWithTime(int time)
+    # createBossEnemy(): BossEnemy
+    + run(): void
+    ~ action(): void
+}
+
+' 定义具体子类
+class EasyGame {
+    + EasyGame()
+    + configureDifficulty()
+    + adjustDifficultyWithTime(int time)
+    + run()
+}
+
+class MediumGame {
+    - initialCycleDuration: int
+    - minCycleDuration: int
+    - initialEliteProb: double
+    - maxEliteProb: double
+    + MediumGame()
+    + configureDifficulty()
+    + adjustDifficultyWithTime(int time)
+    # createBossEnemy(): BossEnemy
+    + run()
+}
+
+class HardGame {
+    - initialBossHp: int
+    - bossHpIncrement: int
+    - maxBossHp: int
+    - initialCycleDuration: int
+    - minCycleDuration: int
+    - initialEliteProb: double
+    - maxEliteProb: double
+    - bossSpawnCount: int
+    + HardGame()
+    + configureDifficulty()
+    + adjustDifficultyWithTime(int time)
+    # createBossEnemy(): BossEnemy
+    + run()
+}
+
+' 定义继承关系
+Game <|-- EasyGame
+Game <|-- MediumGame
+Game <|-- HardGame
+
+' 添加注释说明
+note top of Game
+  抽象模板类：
+  1. 定义游戏的通用流程和算法框架
+  2. 声明抽象方法供子类实现不同难度
+  3. 提供通用方法的默认实现
+end note
+
+note top of EasyGame
+  具体实现类 - 简单难度：
+  1. 敌机数量少
+  2. 不产生Boss敌机
+  3. 难度不随时间增加
+end note
+
+note top of MediumGame
+  具体实现类 - 中等难度：
+  1. 敌机数量适中
+  2. 产生Boss敌机
+  3. 难度随时间适度增加
+end note
+
+note top of HardGame
+  具体实现类 - 困难难度：
+  1. 敌机数量多
+  2. 产生Boss敌机且血量递增
+  3. 难度随时间快速增长
+end note
+
+
+@enduml
